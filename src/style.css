@@ -457,6 +457,90 @@ kbd {
   pointer-events: none;
   overflow: hidden;
 }
+.geometry-entity-anchor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: max-content;
+  will-change: transform;
+}
+.geometry-entity-label {
+  display: block;
+  padding: 3px 6px;
+  border: 1px solid currentcolor;
+  border-radius: 4px;
+  background: #fffffff0;
+  box-shadow: 0 1px 5px #0000001f;
+  font: 650 9px monospace;
+  letter-spacing: 0.35px;
+  line-height: 1.25;
+  white-space: nowrap;
+  transform-origin: bottom center;
+  transition: scale 120ms linear;
+}
+.geometry-entity-label > * {
+  display: block;
+}
+.geometry-entity-label > strong {
+  margin-bottom: 2px;
+  font: inherit;
+}
+.geometry-entity-label > span {
+  color: #34383e;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.geometry-entity-label.ego {
+  color: #0b57d0;
+}
+.geometry-entity-label.vehicle {
+  color: #c4432d;
+}
+.geometry-entity-label.pedestrian {
+  color: #7b3eaa;
+}
+.geometry-lock-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 4px 7px;
+  border: 1px dashed currentcolor;
+  border-radius: 4px;
+  background: #fffffff0;
+  box-shadow: 0 1px 5px #0000001f;
+  font: 500 7px/1.2 monospace;
+  white-space: nowrap;
+  will-change: transform;
+}
+.geometry-lock-label > * {
+  display: block;
+}
+.geometry-lock-label > strong {
+  margin-bottom: 1px;
+  font: inherit;
+}
+.geometry-lock-id {
+  margin-bottom: 1px;
+  color: #34383e;
+  font: inherit;
+}
+.geometry-lock-label > span {
+  color: #34383e;
+  font-weight: 500;
+  font-size: inherit;
+}
+.geometry-lock-label.free {
+  color: #347a59;
+}
+.geometry-lock-label.locked {
+  color: #c86a13;
+}
+.geometry-lock-label .courtesy-state.active {
+  color: #b02c70;
+  font-weight: 650;
+}
 .minimap {
   position: relative;
   width: 180px;

@@ -29,6 +29,7 @@ import {
 import { Simulation } from "./simulation.js";
 import { BackgroundPlanner } from "./background-planner.js";
 import { DriveScene } from "./scene.js";
+import { GeometryScene } from "./geometry-scene.js";
 import { MinimapControls } from "./minimap-controls.js";
 import { Tooltips } from "./tooltips.js";
 import { TouchControls } from "./touch-controls.js";
@@ -139,7 +140,8 @@ $("app").insertAdjacentHTML(
 </div>`,
 );
 createIcons({ icons });
-const scene = new DriveScene($("world-canvas"), sim, $("vector-labels")),
+const Scene = params.get("render") === "geometry" ? GeometryScene : DriveScene;
+const scene = new Scene($("world-canvas"), sim, $("vector-labels")),
   map = $("map-canvas").getContext("2d");
 const minimap = new MinimapControls($("minimap"), sim, drawMap);
 const tooltips = new Tooltips();
