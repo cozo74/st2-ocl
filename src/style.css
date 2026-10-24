@@ -505,12 +505,12 @@ kbd {
   position: absolute;
   top: 0;
   left: 0;
-  padding: 4px 7px;
+  padding: 3px 6px;
   border: 1px dashed currentcolor;
   border-radius: 4px;
   background: #fffffff0;
   box-shadow: 0 1px 5px #0000001f;
-  font: 500 7px/1.2 monospace;
+  font: 650 9px/1.25 monospace;
   white-space: nowrap;
   will-change: transform;
 }
@@ -522,14 +522,14 @@ kbd {
   font: inherit;
 }
 .geometry-lock-id {
-  margin-bottom: 1px;
+  margin-bottom: 2px;
   color: #34383e;
-  font: inherit;
+  font: 500 8px monospace;
 }
 .geometry-lock-label > span {
   color: #34383e;
   font-weight: 500;
-  font-size: inherit;
+  font-size: 8px;
 }
 .geometry-lock-label.free {
   color: #347a59;

@@ -637,7 +637,7 @@ export class GeometryScene {
         Math.abs(point.y) <= 1;
       view.element.hidden = !visible;
       if (visible)
-        view.element.style.transform = `translate(${(point.x * 0.5 + 0.5) * width}px,${(-point.y * 0.5 + 0.5) * height}px) translate(-50%,-50%)`;
+        view.element.style.transform = `translate(${(point.x * 0.5 + 0.5) * width}px,${(-point.y * 0.5 + 0.5) * height}px) translate(-50%,-100%)`;
     }
   }
 
@@ -664,7 +664,7 @@ export class GeometryScene {
       markerGeometry,
       new THREE.PointsMaterial({
         color: COLORS.route,
-        size: 5,
+        size: 2.5,
         sizeAttenuation: false,
         toneMapped: false,
       }),
