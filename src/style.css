@@ -457,6 +457,49 @@ kbd {
   pointer-events: none;
   overflow: hidden;
 }
+.geometry-recovery-status {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 4;
+  padding: 7px 9px;
+  border: 1px solid #30343b33;
+  border-radius: 5px;
+  background: #fffffff0;
+  box-shadow: 0 1px 5px #0000001f;
+  color: #30343b;
+  font: 600 10px/1.3 monospace;
+  pointer-events: none;
+}
+.geometry-safety-status {
+  position: fixed;
+  bottom: 51px;
+  left: 16px;
+  z-index: 4;
+  min-width: 210px;
+  padding: 7px 9px;
+  border: 1px solid #30343b33;
+  border-radius: 5px;
+  background: #fffffff0;
+  box-shadow: 0 1px 5px #0000001f;
+  color: #30343b;
+  font: 600 10px/1.35 monospace;
+  pointer-events: none;
+}
+.geometry-safety-title {
+  margin-bottom: 3px;
+  color: #176b42;
+  font-weight: 750;
+}
+.geometry-safety-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #555d66;
+}
+.geometry-recovery-status.active {
+  color: #c4432d;
+}
 .geometry-entity-anchor {
   position: absolute;
   top: 0;

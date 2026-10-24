@@ -89,6 +89,7 @@ let configured = false,
   generation = 0,
   lastDecision = null,
   lastInput = null,
+  jevSession = null,
   lastContext = null,
   lastApplied = 0,
   nextDecision = 0,
@@ -258,6 +259,19 @@ function refreshWorld() {
 }
 function syncPilot() {
   const on = sim.autopilot;
+  if (!on && jevSession) {
+    const session = jevSession;
+    jevSession = null;
+    fetch("/api/jev-session/end", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: session.id,
+        ended_at: new Date().toISOString(),
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
   $("autopilot").setAttribute("aria-checked", String(on));
   $("pilot-label").textContent = on ? "Jev engaged" : "Engage Jev";
   tooltips.set($("autopilot"), `${on ? "Disengage" : "Engage"} Jev · J`);
@@ -278,6 +292,21 @@ function setPilot(on) {
     return;
   }
   if (sim.crash || (on && sim.complete)) return;
+  if (on && !sim.autopilot) {
+    jevSession = {
+      id: crypto.randomUUID(),
+      startedAt: new Date().toISOString(),
+    };
+    fetch("/api/jev-session/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: jevSession.id,
+        started_at: jevSession.startedAt,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  }
   sim.autopilot = on;
   if (on) sim.freeExplore = false;
   generation++;
@@ -685,7 +714,12 @@ async function decide() {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state, request_id: crypto.randomUUID() }),
+        body: JSON.stringify({
+          state,
+          request_id: crypto.randomUUID(),
+          session_id: jevSession?.id,
+          session_started_at: jevSession?.startedAt,
+        }),
         signal: AbortSignal.timeout(12000),
       }),
       data = await res.json();

@@ -410,6 +410,26 @@ export class GeometryScene {
     this.route = null;
     this.routePoints = null;
     this.updateRoute();
+    this.safetyStatus = document.createElement("div");
+    this.safetyStatus.className = "geometry-safety-status";
+    this.safetyStatus.setAttribute("aria-live", "polite");
+    this.safetyTitle = document.createElement("div");
+    this.safetyTitle.className = "geometry-safety-title";
+    this.safetyRows = Object.fromEntries(
+      ["world", "route", "destination", "following", "conflict"].map(
+        (key) => {
+          const row = document.createElement("div");
+          row.className = "geometry-safety-row";
+          this.safetyStatus.append(row);
+          return [key, row];
+        },
+      ),
+    );
+    this.safetyStatus.prepend(this.safetyTitle);
+    this.vectorLayer.append(this.safetyStatus);
+    this.recoveryStatus = document.createElement("div");
+    this.recoveryStatus.className = "geometry-recovery-status";
+    this.vectorLayer.append(this.recoveryStatus);
 
     this.destination = new THREE.Group();
     this.destination.add(
@@ -674,6 +694,43 @@ export class GeometryScene {
     this.routePoints = points;
   }
 
+  updateRecoveryStatus() {
+    const active = !!this.sim.lastPlan?.recovery?.active;
+    this.recoveryStatus.textContent = `planMode: ${active ? "recovery" : "normal"}`;
+    this.recoveryStatus.classList.toggle("active", active);
+  }
+
+  updateSafetyStatus() {
+    const envelope = this.sim.lastSafetyEnvelope,
+      recovery = !!this.sim.lastPlan?.recovery?.active,
+      mode = !this.sim.autopilot
+        ? "not applied · autopilot off"
+        : !this.sim.safety
+          ? "not applied · safety=false"
+          : recovery
+            ? "recovery guard"
+            : "applied";
+    this.safetyTitle.textContent =
+      `speedEnvelope max ${this.formatSafetySpeed(envelope?.max)} · ${mode}`;
+    const limits = envelope?.limits;
+    for (const [key, label] of [
+      ["world", "world"],
+      ["route", "route"],
+      ["destination", "destination"],
+      ["following", "following"],
+      ["conflict", "traffic conflict"],
+    ]) {
+      this.safetyRows[key].textContent = `${label}: ${this.formatSafetySpeed(limits?.[key])}`;
+    }
+    this.safetyStatus.hidden = false;
+  }
+
+  formatSafetySpeed(value) {
+    if (value === Infinity) return "∞";
+    if (!Number.isFinite(value)) return "—";
+    return `${value.toFixed(1)} m/s · ${(value * 3.6).toFixed(0)} km/h`;
+  }
+
   async prepare() {
     this.render(0, false);
     await this.renderer.compileAsync(this.scene, this.camera);
@@ -700,6 +757,8 @@ export class GeometryScene {
     }
 
     this.updateRoute();
+    this.updateRecoveryStatus();
+    this.updateSafetyStatus();
     const ego = this.sim.player;
     this.player.position.x = ego.x;
     this.player.position.z = ego.z;

@@ -59,6 +59,7 @@ export class Simulation {
     this.paused = false;
     this.autopilot = false;
     this.safety = true;
+    this.lastSafetyEnvelope = null;
     this.pedals = { throttle: 0, brake: 0 };
     this.steeringInput = 0;
     this.brakeReason = null;
@@ -425,7 +426,16 @@ export class Simulation {
     const rule = this.rule(v),
       lead = leadVehicle(v, [...this.traffic, this.player]),
       gap = lead?.gap ?? Infinity;
-    let max = Math.min(this.world.theme.limit, routeSpeedLimit(v, v.s)),
+    const worldLimit = this.world.theme.limit,
+      routeLimit = routeSpeedLimit(v, v.s),
+      limits = {
+        world: worldLimit,
+        route: routeLimit,
+        destination: Infinity,
+        following: Infinity,
+        conflict: Infinity,
+      };
+    let max = Math.min(worldLimit, routeLimit),
       reason = null;
     // NPCs obey the scripted traffic rules. Jev gets the observations and
     // decides when the player's car should approach, yield, or stop.
@@ -441,12 +451,14 @@ export class Simulation {
     if (v === this.player && !this.freeExplore) {
       const distance = Math.max(0, v.route.length - v.s);
       const destinationCap = Math.sqrt(2 * 5 * Math.max(0, distance - 1.5));
+      limits.destination = destinationCap;
       if (destinationCap < max) {
         max = destinationCap;
         reason = "Destination ahead";
       }
     }
     const cap = followingSpeed(v, lead);
+    limits.following = cap;
     if (cap < max) {
       max = cap;
       reason =
@@ -463,6 +475,7 @@ export class Simulation {
         ? predictTrafficConflict(v, [...this.traffic, ...this.pedestrians])
         : null;
     if (conflict?.braking_reduces_risk && conflict.max_speed_mps < max) {
+      limits.conflict = conflict.max_speed_mps;
       max = conflict.max_speed_mps;
       reason = conflict.reason;
     }
@@ -471,7 +484,17 @@ export class Simulation {
       max = Math.min(max, 1.5);
       if (max > 0) reason = "Taking a clear gap";
     }
-    return { max, planningMax, reason, rule, gap, conflict, lead, released };
+    return {
+      max,
+      planningMax,
+      reason,
+      limits,
+      rule,
+      gap,
+      conflict,
+      lead,
+      released,
+    };
   }
   step(dt) {
     if (this.paused || this.crash) return;
@@ -572,6 +595,8 @@ export class Simulation {
     }
     const v = this.player,
       old = { ...collisionPose(v), s: v.s };
+    const env = this.speedEnvelope(v);
+    this.lastSafetyEnvelope = env;
     const currentRule = this.rule(v, true);
     if (
       v.maneuver?.stop_at_line?.node_id === currentRule.nodeId &&
@@ -599,7 +624,6 @@ export class Simulation {
           this.brakeReason = "Recovery clearance";
         }
       } else {
-        const env = this.speedEnvelope(v);
         if (target > env.max) {
           target = env.max;
           this.brakeReason = env.reason;

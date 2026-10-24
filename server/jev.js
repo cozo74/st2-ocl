@@ -1,4 +1,6 @@
 import { performance } from "node:perf_hooks";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import {
   CANDIDATE_COUNT,
   decisionSelection,
@@ -149,6 +151,17 @@ export async function evaluate(state, env, signal, onUsage) {
 export function jevMiddleware(env) {
   // Mounted only by Vite dev/preview. The deployed Worker always requires login.
   let active = 0;
+  const sessions = new Map();
+  const logDir = join(process.cwd(), "logs");
+  const saveSession = async (session) => {
+    await mkdir(logDir, { recursive: true });
+    await writeFile(
+      join(logDir, `${session.id}.json`),
+      `${JSON.stringify(session.data, null, 2)}\n`,
+    );
+  };
+  const validSessionId = (id) =>
+    typeof id === "string" && /^[a-f0-9-]{36}$/i.test(id);
   return async (req, res, next) => {
     const path = new URL(req.url, "http://localhost").pathname;
     if (["/login", "/login.html"].includes(path) && req.method === "GET") {
@@ -174,6 +187,37 @@ export function jevMiddleware(env) {
           output_per_million: Number(env.JEV_OUTPUT_PRICE ?? 0),
         },
       });
+    if (
+      ["/api/jev-session/start", "/api/jev-session/end"].includes(path) &&
+      req.method === "POST"
+    ) {
+      let body = "";
+      for await (const chunk of req) body += chunk;
+      const {
+        session_id: id,
+        started_at: startedAt,
+        ended_at: endedAt,
+      } = JSON.parse(body);
+      if (!validSessionId(id))
+        return send(400, { error: "Invalid session id" });
+      let session = sessions.get(id);
+      if (!session) {
+        session = {
+          id,
+          data: {
+            session_id: id,
+            started_at: startedAt || endedAt || new Date().toISOString(),
+            ended_at: null,
+            calls: [],
+          },
+        };
+        sessions.set(id, session);
+      }
+      if (path.endsWith("/end"))
+        session.data.ended_at = endedAt || new Date().toISOString();
+      await saveSession(session);
+      return send(200, { ok: true });
+    }
     if (path !== "/api/decide" || req.method !== "POST")
       return send(404, { error: "Not found" });
     if (!env.TYPESAFE_API_KEY)
@@ -198,14 +242,50 @@ export function jevMiddleware(env) {
           return;
         }
       }
-      const { state } = JSON.parse(body);
+      const {
+        state,
+        session_id: id,
+        session_started_at: startedAt,
+      } = JSON.parse(body);
       if (!validState(state))
         return send(400, {
           error:
             "A valid driving observation and candidate batch are required.",
         });
-      const result = await evaluate(state, env);
-      send(200, result);
+      let session = null;
+      if (validSessionId(id)) {
+        session = sessions.get(id);
+        if (!session) {
+          session = {
+            id,
+            data: {
+              session_id: id,
+              started_at: startedAt || new Date().toISOString(),
+              ended_at: null,
+              calls: [],
+            },
+          };
+          sessions.set(id, session);
+        }
+      }
+      const call = {
+        started_at: new Date().toISOString(),
+        input: prepareJevRequest(state).request,
+      };
+      try {
+        const result = await evaluate(state, env);
+        call.ended_at = new Date().toISOString();
+        call.output = result;
+        session?.data.calls.push(call);
+        if (session) await saveSession(session);
+        return send(200, result);
+      } catch (error) {
+        call.ended_at = new Date().toISOString();
+        call.error = { message: error.message, status: error.status || 502 };
+        session?.data.calls.push(call);
+        if (session) await saveSession(session);
+        throw error;
+      }
     } catch (e) {
       send(e.status || 502, {
         error:
