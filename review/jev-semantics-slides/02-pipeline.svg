@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">一张图看懂状态生成链路</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="235" width="252" height="320" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DED9CD" stroke-width="2" filter="url(#shadow)"/>
+<rect x="70" y="235" width="252" height="70" rx="24" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="70" y="280" width="252" height="25" rx="0" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="196" y="280" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">① 世界真值</text>
+<text x="96" y="360.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">x / z / heading</text>
+<text x="96" y="396.3" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">道路图、车辆、行人</text>
+<line x1="330" y1="395" x2="364" y2="395" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="372" y="235" width="252" height="320" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DED9CD" stroke-width="2" filter="url(#shadow)"/>
+<rect x="372" y="235" width="252" height="70" rx="24" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="372" y="280" width="252" height="25" rx="0" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="498" y="280" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">② 自车坐标</text>
+<text x="398" y="360.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">right / ahead</text>
+<text x="398" y="396.3" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">relative heading</text>
+<line x1="632" y1="395" x2="666" y2="395" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="674" y="235" width="252" height="320" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DED9CD" stroke-width="2" filter="url(#shadow)"/>
+<rect x="674" y="235" width="252" height="70" rx="24" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="674" y="280" width="252" height="25" rx="0" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="280" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">③ 感知筛选</text>
+<text x="700" y="360.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">距离、视场、遮挡</text>
+<text x="700" y="396.3" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">动态目标优先</text>
+<line x1="934" y1="395" x2="968" y2="395" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="976" y="235" width="252" height="320" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DED9CD" stroke-width="2" filter="url(#shadow)"/>
+<rect x="976" y="235" width="252" height="70" rx="24" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="976" y="280" width="252" height="25" rx="0" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1102" y="280" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">④ 候选 rollout</text>
+<text x="1002" y="360.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">局部采样 55 条</text>
+<text x="1002" y="396.3" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">预测未来 3 秒</text>
+<line x1="1236" y1="395" x2="1270" y2="395" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1278" y="235" width="252" height="320" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DED9CD" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1278" y="235" width="252" height="70" rx="24" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="1278" y="280" width="252" height="25" rx="0" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1404" y="280" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">⑤ Jev 输入</text>
+<text x="1304" y="360.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">表格压缩</text>
+<text x="1304" y="396.3" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">选择 v0…vN</text>
+<rect x="280" y="650" width="1040" height="100" rx="22" fill="#E7F5F4" fill-opacity="1" stroke="#B8DEDA" stroke-width="2"/>
+<text x="800" y="691" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#087E8B" text-anchor="middle" letter-spacing="0">三个坐标语义必须保持一致</text>
+<text x="800" y="729" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="middle" letter-spacing="0">世界坐标用于仿真 · 自车坐标用于模型理解 · route station 用于沿路线度量</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">Current source code + review/jev-input-example.json</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">02</text>
+</svg>

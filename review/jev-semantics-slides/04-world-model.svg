@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">World：道路拓扑 + 连续几何 + 静态对象</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="190" width="700" height="600" rx="26" fill="#EAF0EF" fill-opacity="1" stroke="#CDD9D6" stroke-width="2"/>
+<line x1="190" y1="330" x2="420" y2="265" stroke="#59636C" stroke-width="18" stroke-linecap="round" opacity="1"/>
+<line x1="190" y1="330" x2="420" y2="265" stroke="#F7E6A6" stroke-width="2" stroke-linecap="round" opacity="1" stroke-dasharray="12 12"/>
+<line x1="420" y1="265" x2="625" y2="350" stroke="#59636C" stroke-width="18" stroke-linecap="round" opacity="1"/>
+<line x1="420" y1="265" x2="625" y2="350" stroke="#F7E6A6" stroke-width="2" stroke-linecap="round" opacity="1" stroke-dasharray="12 12"/>
+<line x1="190" y1="330" x2="345" y2="565" stroke="#59636C" stroke-width="18" stroke-linecap="round" opacity="1"/>
+<line x1="190" y1="330" x2="345" y2="565" stroke="#F7E6A6" stroke-width="2" stroke-linecap="round" opacity="1" stroke-dasharray="12 12"/>
+<line x1="420" y1="265" x2="345" y2="565" stroke="#59636C" stroke-width="18" stroke-linecap="round" opacity="1"/>
+<line x1="420" y1="265" x2="345" y2="565" stroke="#F7E6A6" stroke-width="2" stroke-linecap="round" opacity="1" stroke-dasharray="12 12"/>
+<line x1="625" y1="350" x2="610" y2="650" stroke="#59636C" stroke-width="18" stroke-linecap="round" opacity="1"/>
+<line x1="625" y1="350" x2="610" y2="650" stroke="#F7E6A6" stroke-width="2" stroke-linecap="round" opacity="1" stroke-dasharray="12 12"/>
+<line x1="345" y1="565" x2="610" y2="650" stroke="#59636C" stroke-width="18" stroke-linecap="round" opacity="1"/>
+<line x1="345" y1="565" x2="610" y2="650" stroke="#F7E6A6" stroke-width="2" stroke-linecap="round" opacity="1" stroke-dasharray="12 12"/>
+<circle cx="190" cy="330" r="31" fill="#087E8B" fill-opacity="1" stroke="#FFFFFF" stroke-width="3"/>
+<text x="190" y="337" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">j0</text>
+<circle cx="420" cy="265" r="31" fill="#087E8B" fill-opacity="1" stroke="#FFFFFF" stroke-width="3"/>
+<text x="420" y="272" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">j1</text>
+<circle cx="625" cy="350" r="31" fill="#087E8B" fill-opacity="1" stroke="#FFFFFF" stroke-width="3"/>
+<text x="625" y="357" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">j2</text>
+<circle cx="345" cy="565" r="31" fill="#087E8B" fill-opacity="1" stroke="#FFFFFF" stroke-width="3"/>
+<text x="345" y="572" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">j3</text>
+<circle cx="610" cy="650" r="31" fill="#087E8B" fill-opacity="1" stroke="#FFFFFF" stroke-width="3"/>
+<text x="610" y="657" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">j4</text>
+<path d="M190,330 C260,300 340,278 420,265 C500,270 565,305 625,350 C635,465 625,560 610,650" fill="none" stroke="#2D5BFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+<text x="115" y="235" font-family="Noto Sans CJK SC" font-size="21" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">nodes + edges：可达性与最短路径</text>
+<rect x="118" y="710" width="300" height="42" rx="21" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="268.0" y="738" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">route.points (x, z, s)</text>
+<text x="440" y="738" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">把离散道路图变成车辆可跟随的连续曲线</text>
+<rect x="830" y="190" width="700" height="100" rx="20" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="830" y="190" width="12" height="100" rx="6" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="870" y="228" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">nodes / byId</text>
+<text x="870" y="265" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">路口坐标、邻接关系、stop/signal 控制</text>
+<rect x="830" y="312" width="700" height="100" rx="20" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="830" y="312" width="12" height="100" rx="6" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="870" y="350" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">edges</text>
+<text x="870" y="387" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">宽度、限速、道路名称、方向、几何 path</text>
+<rect x="830" y="434" width="700" height="100" rx="20" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="830" y="434" width="12" height="100" rx="6" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="870" y="472" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">route</text>
+<text x="870" y="509" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">ids、连续 points、crossings、高速 sections</text>
+<rect x="830" y="556" width="700" height="100" rx="20" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="830" y="556" width="12" height="100" rx="6" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="870" y="594" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">objects</text>
+<text x="870" y="631" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">building、tree、sign、light、overpass…</text>
+<rect x="830" y="678" width="700" height="100" rx="20" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="830" y="678" width="12" height="100" rx="6" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="870" y="716" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">metadata</text>
+<text x="870" y="753" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">seed、type、theme、bounds、destination</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/world.js generateWorld()/makeRoute() · src/highway.js</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">04</text>
+</svg>

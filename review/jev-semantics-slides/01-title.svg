@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · TECHNICAL WALKTHROUGH</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">从仿真坐标到 Jev 候选决策</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<text x="76" y="235" font-family="Noto Sans CJK SC" font-size="34" font-weight="700" fill="#16202A" text-anchor="start" letter-spacing="0">位置 · 角度 · 道路边界 · 交通感知 · 候选轨迹</text>
+<text x="76" y="292" font-family="Noto Sans CJK SC" font-size="24" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">把连续驾驶世界压缩成模型可选择、系统可校验的结构化状态</text>
+<rect x="76" y="374" width="1448" height="300" rx="34" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1" filter="url(#shadow)"/>
+<circle cx="200" cy="506" r="64" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="200" y="500" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">WORLD</text>
+<text x="200" y="535" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">全局 x/z</text>
+<line x1="272" y1="506" x2="398" y2="506" stroke="#42C4D8" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<circle cx="480" cy="506" r="64" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="480" y="500" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">EGO</text>
+<text x="480" y="535" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">right/ahead</text>
+<line x1="552" y1="506" x2="678" y2="506" stroke="#42C4D8" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<circle cx="760" cy="506" r="64" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="760" y="500" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">SENSE</text>
+<text x="760" y="535" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">boundaries + traffic</text>
+<line x1="832" y1="506" x2="958" y2="506" stroke="#42C4D8" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<circle cx="1040" cy="506" r="64" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1040" y="500" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">PLAN</text>
+<text x="1040" y="535" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">3 s rollout</text>
+<line x1="1112" y1="506" x2="1238" y2="506" stroke="#42C4D8" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<circle cx="1320" cy="506" r="64" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1320" y="500" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">JEV</text>
+<text x="1320" y="535" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">选择 vN</text>
+<text x="800" y="741" font-family="Noto Sans CJK SC" font-size="25" font-weight="800" fill="#087E8B" text-anchor="middle" letter-spacing="0">核心结论：Jev 不生成任意控制量，只从本地验证过的候选中选择。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">Current source code + review/jev-input-example.json</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">01</text>
+</svg>

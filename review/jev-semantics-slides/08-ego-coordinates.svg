@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">位置坐标规则：转换到自车坐标</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="190" width="870" height="610" rx="26" fill="#EFF3F6" fill-opacity="1" stroke="#D5DDE3" stroke-width="2"/>
+<g transform="translate(460 550) rotate(35) scale(0.9)">
+<rect x="-32" y="-60" width="64" height="120" rx="22" fill="#2D5BFF" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M-23,-18 L-18,-42 L18,-42 L23,-18 Z" fill="#DCEEFF" opacity=".85"/>
+<path d="M-16,48 L0,60 L16,48" fill="#FFFFFF" opacity=".9"/>
+</g>
+<text x="460" y="629.2" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">ego</text>
+<line x1="460" y1="550" x2="650" y2="320" stroke="#087E8B" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<text x="665" y="310" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#087E8B" text-anchor="start" letter-spacing="0">+ahead</text>
+<line x1="460" y1="550" x2="690" y2="735" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<text x="705" y="755" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#F59E0B" text-anchor="start" letter-spacing="0">+right</text>
+<circle cx="710" cy="380" r="24" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="710" y="388" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">T</text>
+<line x1="460" y1="550" x2="710" y2="380" stroke="#E45756" stroke-width="3" stroke-linecap="round" opacity="1" stroke-dasharray="10 8"/>
+<rect x="110" y="225" width="360" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="290.0" y="253" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">输出永远是 [right, ahead]</text>
+<text x="110" y="302" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">目标在左侧 → right &lt; 0</text>
+<text x="110" y="341" font-family="Noto Sans CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">目标在后方 → ahead &lt; 0</text>
+<rect x="990" y="190" width="540" height="285" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2"/>
+<text x="1030" y="238" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#087E8B" text-anchor="start" letter-spacing="0">世界差值</text>
+<text x="1030" y="282" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">dx = target.x − ego.x</text>
+<text x="1030" y="320" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">dz = target.z − ego.z</text>
+<text x="1030" y="375" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="700" fill="#2D5BFF" text-anchor="start" letter-spacing="0">right = dx·cos(h) + dz·sin(h)</text>
+<text x="1030" y="415" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="700" fill="#2D5BFF" text-anchor="start" letter-spacing="0">ahead = dx·sin(h) − dz·cos(h)</text>
+<rect x="990" y="505" width="540" height="295" rx="24" fill="#E7F5F4" fill-opacity="1" stroke="#B8DEDA" stroke-width="2"/>
+<text x="1030" y="553" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#087E8B" text-anchor="start" letter-spacing="0">为什么发送局部坐标？</text>
+<circle cx="1045" cy="612" r="7" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1065" y="619" font-family="Noto Sans CJK SC" font-size="21" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">与地图绝对位置无关</text>
+<circle cx="1045" cy="657" r="7" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1065" y="664" font-family="Noto Sans CJK SC" font-size="21" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">车辆转向后语义仍一致</text>
+<circle cx="1045" cy="702" r="7" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1065" y="709" font-family="Noto Sans CJK SC" font-size="21" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">直接回答：在左/右、前/后多远</text>
+<circle cx="1045" cy="747" r="7" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1065" y="754" font-family="Noto Sans CJK SC" font-size="21" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">boundaries、traffic、candidate 终点统一</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/road-geometry.js relativePoint() · src/jev-request.js destination conversion</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">08</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">位置坐标规则：世界坐标系</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="190" width="850" height="600" rx="26" fill="#E9EFEA" fill-opacity="1" stroke="#CDD7D0" stroke-width="2"/>
+<line x1="130" y1="220" x2="130" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="215" y1="220" x2="215" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="300" y1="220" x2="300" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="385" y1="220" x2="385" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="470" y1="220" x2="470" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="555" y1="220" x2="555" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="640" y1="220" x2="640" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="725" y1="220" x2="725" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="810" y1="220" x2="810" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="895" y1="220" x2="895" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="245" x2="890" y2="245" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="330" x2="890" y2="330" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="415" x2="890" y2="415" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="500" x2="890" y2="500" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="585" x2="890" y2="585" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="670" x2="890" y2="670" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<line x1="105" y1="755" x2="890" y2="755" stroke="#D0D8D3" stroke-width="1" stroke-linecap="round" opacity="1"/>
+<circle cx="500" cy="500" r="8" fill="#16202A" fill-opacity="1" stroke="none" stroke-width="1"/>
+<line x1="500" y1="500" x2="790" y2="500" stroke="#2D5BFF" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<text x="805" y="508" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#2D5BFF" text-anchor="start" letter-spacing="0">+x 东 / East</text>
+<line x1="500" y1="500" x2="500" y2="735" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<text x="518" y="748" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#F59E0B" text-anchor="start" letter-spacing="0">+z 南 / South</text>
+<line x1="500" y1="500" x2="500" y2="255" stroke="#087E8B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<text x="518" y="260" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#087E8B" text-anchor="start" letter-spacing="0">heading = 0° 北</text>
+<g transform="translate(500 465) rotate(0) scale(0.72)">
+<rect x="-32" y="-60" width="64" height="120" rx="22" fill="#2D5BFF" stroke="#FFFFFF" stroke-width="4"/>
+<path d="M-23,-18 L-18,-42 L18,-42 L23,-18 Z" fill="#DCEEFF" opacity=".85"/>
+<path d="M-16,48 L0,60 L16,48" fill="#FFFFFF" opacity=".9"/>
+</g>
+<text x="500" y="528.36" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">ego (x, z)</text>
+<rect x="970" y="190" width="560" height="175" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2"/>
+<text x="1010" y="238" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#087E8B" text-anchor="start" letter-spacing="0">二维地面平面</text>
+<text x="1010" y="282.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="500" fill="#16202A" text-anchor="start" letter-spacing="0">车辆移动使用 x 和 z；Three.js 的 y</text>
+<text x="1010" y="313.24" font-family="Noto Sans CJK SC" font-size="22" font-weight="500" fill="#16202A" text-anchor="start" letter-spacing="0">只表示高度。</text>
+<rect x="970" y="390" width="560" height="180" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2"/>
+<text x="1010" y="438" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#2D5BFF" text-anchor="start" letter-spacing="0">沿航向移动 d 米</text>
+<text x="1010" y="487" font-family="Noto Sans Mono CJK SC" font-size="23" font-weight="650" fill="#16202A" text-anchor="start" letter-spacing="0">x′ = x + sin(h) · d</text>
+<text x="1010" y="529" font-family="Noto Sans Mono CJK SC" font-size="23" font-weight="650" fill="#16202A" text-anchor="start" letter-spacing="0">z′ = z − cos(h) · d</text>
+<rect x="970" y="595" width="560" height="195" rx="24" fill="#FFF4DF" fill-opacity="1" stroke="#F2D39A" stroke-width="2"/>
+<text x="1010" y="643" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#F59E0B" text-anchor="start" letter-spacing="0">讲解提醒</text>
+<text x="1010" y="687.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="500" fill="#16202A" text-anchor="start" letter-spacing="0">屏幕俯视图常把“向上”画成北，所以北向移动时 z 反而减小。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/math.js · src/simulation.js observation.frame.coordinates</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">07</text>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">traffic 感知：谁会进入 Jev 输入？</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<path d="M125.0,210 L935.0,210 L875.0,325 L185.0,325 Z" fill="#087E8B" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+<text x="530" y="253" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">候选对象</text>
+<text x="530" y="292" font-family="Noto Sans CJK SC" font-size="18" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">traffic + pedestrians + world objects</text>
+<path d="M190.0,370 L870.0,370 L810.0,485 L250.0,485 Z" fill="#2D5BFF" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+<text x="530" y="413" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">类型过滤</text>
+<text x="530" y="452" font-family="Noto Sans CJK SC" font-size="18" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">车 / 摩托 / 行人 / 建筑 / 标志 / 信号灯</text>
+<path d="M255.0,530 L805.0,530 L745.0,645 L315.0,645 Z" fill="#42C4D8" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+<text x="530" y="573" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">距离与视场</text>
+<text x="530" y="612" font-family="Noto Sans CJK SC" font-size="18" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">range=max(80, |speed|×6)；动态目标 360°</text>
+<path d="M320.0,690 L740.0,690 L680.0,805 L380.0,805 Z" fill="#F59E0B" stroke="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>
+<text x="530" y="733" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">建筑遮挡</text>
+<text x="530" y="772" font-family="Noto Sans CJK SC" font-size="18" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">blockedByBuilding：视线穿过建筑则剔除</text>
+<line x1="530" y1="808" x2="530" y2="838" stroke="#087E8B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="970" y="205" width="560" height="265" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2"/>
+<text x="1010" y="253" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#087E8B" text-anchor="start" letter-spacing="0">转换为自车相对状态</text>
+<rect x="1010" y="292" width="360" height="42" rx="21" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1190.0" y="320" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">right_m / ahead_m</text>
+<rect x="1010" y="336" width="360" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1190.0" y="364" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">speed_mps</text>
+<rect x="1010" y="380" width="360" height="42" rx="21" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1190.0" y="408" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">heading_relative_deg</text>
+<rect x="1010" y="424" width="360" height="42" rx="21" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1190.0" y="452" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">relative_velocity_ahead_mps</text>
+<rect x="970" y="500" width="560" height="300" rx="24" fill="#EFF3FF" fill-opacity="1" stroke="#C7D2FF" stroke-width="2"/>
+<text x="1010" y="548" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#2D5BFF" text-anchor="start" letter-spacing="0">进入模型前再裁剪</text>
+<text x="1010" y="595.0" font-family="Noto Sans CJK SC" font-size="22" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">仅动态目标进入 traffic</text>
+<text x="1010" y="626.24" font-family="Noto Sans CJK SC" font-size="22" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">表；优先保留冲突目标、前车和后车，然后最多取 10 个。</text>
+<text x="1010" y="710" font-family="Noto Sans CJK SC" font-size="20" font-weight="700" fill="#5D6873" text-anchor="start" letter-spacing="0">静态控制设施</text>
+<text x="1010" y="748" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">→ intersection / road 状态，而非 traffic 行</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/simulation.js scanScene()/decisionState()</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">12</text>
+</svg>

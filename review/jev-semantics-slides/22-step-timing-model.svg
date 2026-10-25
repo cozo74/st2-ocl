@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">物理 step：帧驱动的可变时间步，不是固定 60 Hz</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="190" width="940" height="600" rx="28" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<text x="110" y="242" font-family="Noto Sans CJK SC" font-size="26" font-weight="850" fill="#087E8B" text-anchor="start" letter-spacing="0">一帧如何转换为物理子步</text>
+<text x="115" y="324" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">60 FPS</text>
+<rect x="245" y="289" width="120" height="42" rx="21" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="305.0" y="317" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">16 ms</text>
+<line x1="380" y1="310" x2="460" y2="310" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="485.0" y="285" width="304.0" height="50" rx="10" fill="#2D5BFF" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<text x="825" y="323" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="850" fill="#2D5BFF" text-anchor="start" letter-spacing="0">1 × 16 ms</text>
+<text x="115" y="429" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">30 FPS</text>
+<rect x="245" y="394" width="120" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="305.0" y="422" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">33 ms</text>
+<line x1="380" y1="415" x2="460" y2="415" stroke="#087E8B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="485.0" y="390" width="149.0" height="50" rx="10" fill="#087E8B" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="640.0" y="390" width="149.0" height="50" rx="10" fill="#087E8B" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<text x="825" y="428" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="850" fill="#087E8B" text-anchor="start" letter-spacing="0">2 × 16.5 ms</text>
+<text x="115" y="534" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">卡顿帧</text>
+<rect x="245" y="499" width="120" height="42" rx="21" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="305.0" y="527" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">80 ms</text>
+<line x1="380" y1="520" x2="460" y2="520" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<rect x="485.0" y="495" width="71.5" height="50" rx="10" fill="#F59E0B" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="562.5" y="495" width="71.5" height="50" rx="10" fill="#F59E0B" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="640.0" y="495" width="71.5" height="50" rx="10" fill="#F59E0B" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="717.5" y="495" width="71.5" height="50" rx="10" fill="#F59E0B" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<text x="825" y="533" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="850" fill="#F59E0B" text-anchor="start" letter-spacing="0">4 × 20 ms</text>
+<text x="115" y="639" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">上限帧</text>
+<rect x="245" y="604" width="120" height="42" rx="21" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="305.0" y="632" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">≥ 200 ms</text>
+<line x1="380" y1="625" x2="460" y2="625" stroke="#E45756" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<rect x="485.0" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="523.75" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="562.5" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="601.25" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="640.0" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="678.75" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="717.5" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<rect x="756.25" y="600" width="32.75" height="50" rx="10" fill="#E45756" fill-opacity="0.88" stroke="none" stroke-width="1"/>
+<text x="825" y="638" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="850" fill="#E45756" text-anchor="start" letter-spacing="0">8 × 25 ms</text>
+<rect x="1060" y="190" width="470" height="285" rx="26" fill="#EFF3FF" fill-opacity="1" stroke="#C7D2FF" stroke-width="3"/>
+<text x="1295" y="240" font-family="Noto Sans CJK SC" font-size="25" font-weight="900" fill="#2D5BFF" text-anchor="middle" letter-spacing="0">时间计算</text>
+<text x="1100" y="302" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="700" fill="#16202A" text-anchor="start" letter-spacing="0">frame dt = min(real dt, 0.2 s)</text>
+<text x="1100" y="355" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="700" fill="#16202A" text-anchor="start" letter-spacing="0">steps = ceil(dt / 0.025 s)</text>
+<text x="1100" y="408" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="700" fill="#16202A" text-anchor="start" letter-spacing="0">step dt = frame dt / steps</text>
+<rect x="1060" y="515" width="470" height="275" rx="26" fill="#FFF4DF" fill-opacity="1" stroke="#F2D39A" stroke-width="3"/>
+<text x="1295" y="565" font-family="Noto Sans CJK SC" font-size="25" font-weight="900" fill="#F59E0B" text-anchor="middle" letter-spacing="0">为什么高频子步？</text>
+<circle cx="1100" cy="618" r="7" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1120" y="625" font-family="Noto Sans CJK SC" font-size="20" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">减少积分与转向误差</text>
+<circle cx="1100" cy="661" r="7" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1120" y="668" font-family="Noto Sans CJK SC" font-size="20" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">避免跨过停车线</text>
+<circle cx="1100" cy="704" r="7" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1120" y="711" font-family="Noto Sans CJK SC" font-size="20" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">改善接触时刻与位置</text>
+<circle cx="1100" cy="747" r="7" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1120" y="754" font-family="Noto Sans CJK SC" font-size="20" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">让加速、制动更连续</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/main.js animate(): dt cap + ≤25 ms substeps · src/simulation.js step(dt)</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">22</text>
+</svg>

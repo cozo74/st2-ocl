@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">同一世界状态，按使用者生成三种视图</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="140" y="180" width="1320" height="165" rx="28" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1" filter="url(#shadow)"/>
+<text x="800" y="226" font-family="Noto Sans Mono CJK SC" font-size="27" font-weight="900" fill="#42C4D8" text-anchor="middle" letter-spacing="0">Simulation · 完整且可变的权威状态</text>
+<rect x="205" y="270" width="178" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="294.0" y="298" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">world</text>
+<rect x="410" y="270" width="178" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="499.0" y="298" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">player</text>
+<rect x="615" y="270" width="178" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="704.0" y="298" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">traffic[]</text>
+<rect x="820" y="270" width="178" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="909.0" y="298" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">pedestrians[]</text>
+<rect x="1025" y="270" width="178" height="42" rx="21" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1114.0" y="298" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">locks / courtesy</text>
+<rect x="1230" y="270" width="178" height="42" rx="21" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1319.0" y="298" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">perception / lastPlan</text>
+<line x1="800" y1="345" x2="290" y2="390" stroke="#087E8B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="70" y="400" width="440" height="330" rx="26" fill="#FFFFFF" fill-opacity="1" stroke="#087E8B" stroke-width="3" filter="url(#shadow)"/>
+<text x="290" y="450" font-family="Noto Sans CJK SC" font-size="22" font-weight="850" fill="#087E8B" text-anchor="middle" letter-spacing="0">Web / 调试</text>
+<text x="105" y="500.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">observation(full)</text>
+<circle cx="118" cy="563" r="8" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="140" y="570" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">frame + ego</text>
+<circle cx="118" cy="611" r="8" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="140" y="618" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">sensor + telemetry</text>
+<circle cx="118" cy="659" r="8" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="140" y="666" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">可选完整 world</text>
+<text x="290" y="700" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#5D6873" text-anchor="middle" letter-spacing="0">信息最全</text>
+<line x1="800" y1="345" x2="800" y2="390" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="580" y="400" width="440" height="330" rx="26" fill="#FFFFFF" fill-opacity="1" stroke="#2D5BFF" stroke-width="3" filter="url(#shadow)"/>
+<text x="800" y="450" font-family="Noto Sans CJK SC" font-size="22" font-weight="850" fill="#2D5BFF" text-anchor="middle" letter-spacing="0">本地规划</text>
+<text x="615" y="500.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">decisionState()</text>
+<circle cx="628" cy="563" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="650" y="570" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">road + lane</text>
+<circle cx="628" cy="611" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="650" y="618" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">scene + traffic</text>
+<circle cx="628" cy="659" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="650" y="666" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">vectors + constraints</text>
+<text x="800" y="700" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#5D6873" text-anchor="middle" letter-spacing="0">服务于控制</text>
+<line x1="800" y1="345" x2="1310" y2="390" stroke="#F59E0B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<rect x="1090" y="400" width="440" height="330" rx="26" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="3" filter="url(#shadow)"/>
+<text x="1310" y="450" font-family="Noto Sans CJK SC" font-size="22" font-weight="850" fill="#F59E0B" text-anchor="middle" letter-spacing="0">模型输入</text>
+<text x="1125" y="500.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">prepareJevRequest()</text>
+<circle cx="1138" cy="563" r="8" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1160" y="570" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">共享字段压缩</text>
+<circle cx="1138" cy="611" r="8" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1160" y="618" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">候选匿名为 vN</text>
+<circle cx="1138" cy="659" r="8" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1160" y="666" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">只保留选择题</text>
+<text x="1310" y="700" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#5D6873" text-anchor="middle" letter-spacing="0">最小必要信息</text>
+<rect x="250" y="765" width="1100" height="60" rx="22" fill="#E7F5F4" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="803" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#087E8B" text-anchor="middle" letter-spacing="0">派生方向是单向的：内部真值 → 视图；视图不能替代完整世界状态。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/simulation.js observation()/decisionState() · src/jev-request.js</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">06</text>
+</svg>

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">异步结果还要通过时效与运行时安全门</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="190" width="980" height="590" rx="28" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="125" cy="237" r="20" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="244" font-family="Noto Sans CJK SC" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">1</text>
+<text x="170" y="245" font-family="Noto Sans Mono CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">generation token</text>
+<text x="405" y="245" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">重置、切换模式或新请求后，旧结果作废</text>
+<line x1="125" y1="261" x2="125" y2="298" stroke="#B9C7C7" stroke-width="3" stroke-linecap="round" opacity="1"/>
+<circle cx="125" cy="319" r="20" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="326" font-family="Noto Sans CJK SC" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">2</text>
+<text x="170" y="327" font-family="Noto Sans Mono CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">routeVersion</text>
+<text x="405" y="327" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">路线重算后，旧路线候选不能再应用</text>
+<line x1="125" y1="343" x2="125" y2="380" stroke="#B9C7C7" stroke-width="3" stroke-linecap="round" opacity="1"/>
+<circle cx="125" cy="401" r="20" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="408" font-family="Noto Sans CJK SC" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">3</text>
+<text x="170" y="409" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">1.8 s expiry</text>
+<text x="405" y="409" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">响应太晚就丢弃，避免控制滞后</text>
+<line x1="125" y1="425" x2="125" y2="462" stroke="#B9C7C7" stroke-width="3" stroke-linecap="round" opacity="1"/>
+<circle cx="125" cy="483" r="20" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="490" font-family="Noto Sans CJK SC" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">4</text>
+<text x="170" y="491" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">context changed</text>
+<text x="405" y="491" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">路口、信号、停车记忆等变化会使结果失效</text>
+<line x1="125" y1="507" x2="125" y2="544" stroke="#B9C7C7" stroke-width="3" stroke-linecap="round" opacity="1"/>
+<circle cx="125" cy="565" r="20" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="572" font-family="Noto Sans CJK SC" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">5</text>
+<text x="170" y="573" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">step() envelope</text>
+<text x="405" y="573" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">执行时重新限制速度/倒车，并处理停车线语义</text>
+<line x1="125" y1="589" x2="125" y2="626" stroke="#B9C7C7" stroke-width="3" stroke-linecap="round" opacity="1"/>
+<circle cx="125" cy="647" r="20" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="654" font-family="Noto Sans CJK SC" font-size="18" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">6</text>
+<text x="170" y="655" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">actual collision</text>
+<text x="405" y="655" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">真实 swept collision 仍是最终物理终止条件</text>
+<rect x="1100" y="190" width="430" height="350" rx="26" fill="#FFF4DF" fill-opacity="1" stroke="#F2D39A" stroke-width="3" filter="url(#shadow)"/>
+<text x="1315" y="242" font-family="Noto Sans CJK SC" font-size="25" font-weight="900" fill="#F59E0B" text-anchor="middle" letter-spacing="0">检查强度</text>
+<text x="1160" y="305" font-family="Noto Sans CJK SC" font-size="19" font-weight="850" fill="#F59E0B" text-anchor="start" letter-spacing="0">过滤</text>
+<text x="1245" y="305" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">不进入选项</text>
+<text x="1160" y="351" font-family="Noto Sans CJK SC" font-size="19" font-weight="850" fill="#F59E0B" text-anchor="start" letter-spacing="0">拒绝</text>
+<text x="1245" y="351" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">响应报错</text>
+<text x="1160" y="397" font-family="Noto Sans CJK SC" font-size="19" font-weight="850" fill="#F59E0B" text-anchor="start" letter-spacing="0">丢弃</text>
+<text x="1245" y="397" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">过期/上下文变化</text>
+<text x="1160" y="443" font-family="Noto Sans CJK SC" font-size="19" font-weight="850" fill="#F59E0B" text-anchor="start" letter-spacing="0">覆盖</text>
+<text x="1245" y="443" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">运行时限速/制动</text>
+<text x="1160" y="489" font-family="Noto Sans CJK SC" font-size="19" font-weight="850" fill="#F59E0B" text-anchor="start" letter-spacing="0">终止</text>
+<text x="1245" y="489" font-family="Noto Sans CJK SC" font-size="19" font-weight="550" fill="#16202A" text-anchor="start" letter-spacing="0">真实碰撞</text>
+<rect x="1100" y="575" width="430" height="205" rx="26" fill="#FDECEC" fill-opacity="1" stroke="#F3B7B5" stroke-width="3"/>
+<text x="1315" y="625" font-family="Noto Sans CJK SC" font-size="23" font-weight="900" fill="#E45756" text-anchor="middle" letter-spacing="0">已识别的校验空隙</text>
+<text x="1140" y="677.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">概率会逐项检查</text>
+<text x="1140" y="702.65" font-family="Noto Sans CJK SC" font-size="19" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">[0,1]，但当前没有显式检查总和等于</text>
+<text x="1140" y="728.3" font-family="Noto Sans CJK SC" font-size="19" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">1，也未明确拒绝额外概率键。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/main.js async guards · src/simulation.js step() · src/planning.js response checks</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">20</text>
+</svg>

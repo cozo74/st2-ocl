@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">candidate 生成：先广泛采样，再筛出可讲的 12 条</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="80" y="200" width="450" height="170" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="80" y="200" width="14" height="170" rx="7" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="122" y="257" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">① 环境分析</text>
+<text x="122" y="305.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">道路占用、route、停车线、前车、限速</text>
+<line x1="536" y1="285" x2="574" y2="285" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="585" y="200" width="450" height="170" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="585" y="200" width="14" height="170" rx="7" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="627" y="257" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">② 生成池</text>
+<text x="627" y="305.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">正常约 55 条；脱困 11 条</text>
+<line x1="1041" y1="285" x2="1079" y2="285" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1090" y="200" width="450" height="170" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1090" y="200" width="14" height="170" rx="7" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1132" y="257" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">③ 3 秒 rollout</text>
+<text x="1132" y="305.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">60 步积分；第 24 步作短期评价</text>
+<path d="M1315,380 L1315,418 L300,418 L300,435" fill="none" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="80" y="440" width="450" height="170" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="80" y="440" width="14" height="170" rx="7" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="122" y="497" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">④ 全路径评价</text>
+<text x="122" y="545.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">道路、车道、路线、碰撞、停止线</text>
+<line x1="536" y1="525" x2="574" y2="525" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="585" y="440" width="450" height="170" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="585" y="440" width="14" height="170" rx="7" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="627" y="497" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">⑤ 排序与覆盖</text>
+<text x="627" y="545.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">最优 3 + 横向 4 + 探索 4</text>
+<line x1="1041" y1="525" x2="1079" y2="525" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1090" y="440" width="450" height="170" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1090" y="440" width="14" height="170" rx="7" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1132" y="497" font-family="Noto Sans CJK SC" font-size="24" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">⑥ 加入停车</text>
+<text x="1132" y="545.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">最终最多 12 条候选</text>
+<rect x="205" y="700" width="1190" height="100" rx="22" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="741" font-family="Noto Sans CJK SC" font-size="22" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">正常道路：围绕路线导向转角采样 + 少量宽范围探索</text>
+<text x="800" y="779" font-family="Noto Sans CJK SC" font-size="20" font-weight="650" fill="#42C4D8" text-anchor="middle" letter-spacing="0">脱困模式：覆盖完整转向范围，并允许 ±2 m/s 前进/倒车</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/driving-plan.js createDrivingPlan() · src/planning.js projectVector()</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">14</text>
+</svg>

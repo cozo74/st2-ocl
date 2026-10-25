@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">Jev 返回后：不是信任控制量，而是核对选择结果</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="195" width="450" height="190" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#2D5BFF" stroke-width="3" filter="url(#shadow)"/>
+<rect x="70" y="195" width="450" height="62" rx="23" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="70" y="235" width="450" height="22" rx="0" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="295" y="236" font-family="Noto Sans CJK SC" font-size="23" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">① Jev 回答</text>
+<text x="104" y="307.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">motion / vector / route</text>
+<text x="104" y="334.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">choice + probabilities</text>
+<line x1="526" y1="291" x2="568" y2="291" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="580" y="195" width="450" height="190" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#087E8B" stroke-width="3" filter="url(#shadow)"/>
+<rect x="580" y="195" width="450" height="62" rx="23" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="580" y="235" width="450" height="22" rx="0" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="805" y="236" font-family="Noto Sans CJK SC" font-size="23" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">② 服务端验答</text>
+<text x="614" y="307.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">choice 属于 options</text>
+<text x="614" y="334.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">概率逐项有限且在 [0,1]</text>
+<line x1="1036" y1="291" x2="1078" y2="291" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1090" y="195" width="450" height="190" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#42C4D8" stroke-width="3" filter="url(#shadow)"/>
+<rect x="1090" y="195" width="450" height="62" rx="23" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="1090" y="235" width="450" height="22" rx="0" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1315" y="236" font-family="Noto Sans CJK SC" font-size="23" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">③ 展开别名</text>
+<text x="1124" y="307.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">vN → 内部 batch candidate ID</text>
+<rect x="70" y="465" width="450" height="190" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="3" filter="url(#shadow)"/>
+<rect x="70" y="465" width="450" height="62" rx="23" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="70" y="505" width="450" height="22" rx="0" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="295" y="506" font-family="Noto Sans CJK SC" font-size="23" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">④ 再查风险</text>
+<text x="104" y="577.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">被选移动轨迹不能</text>
+<text x="104" y="604.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">collision_imminent</text>
+<line x1="526" y1="561" x2="568" y2="561" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="580" y="465" width="450" height="190" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#21A179" stroke-width="3" filter="url(#shadow)"/>
+<rect x="580" y="465" width="450" height="62" rx="23" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="580" y="505" width="450" height="22" rx="0" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="805" y="506" font-family="Noto Sans CJK SC" font-size="23" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">⑤ 反推控制</text>
+<text x="614" y="577.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">speed / steering /</text>
+<text x="614" y="604.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">maneuver</text>
+<text x="614" y="631.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">来自候选本身</text>
+<line x1="1036" y1="561" x2="1078" y2="561" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1090" y="465" width="450" height="190" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#E45756" stroke-width="3" filter="url(#shadow)"/>
+<rect x="1090" y="465" width="450" height="62" rx="23" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="1090" y="505" width="450" height="22" rx="0" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1315" y="506" font-family="Noto Sans CJK SC" font-size="23" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">⑥ 客户端复核</text>
+<text x="1124" y="577.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">batch、choice、概率、controls</text>
+<text x="1124" y="604.0" font-family="Noto Sans CJK SC" font-size="20" font-weight="580" fill="#16202A" text-anchor="start" letter-spacing="0">必须逐项一致</text>
+<path d="M1310,390 L1310,425 L295,425 L295,455" fill="none" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="230" y="735" width="1140" height="72" rx="22" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="779" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">因此 Jev 只能选 ID；不能注入任意 steering、speed 或新轨迹。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">server/jev.js validateAnswer()/buildResponse() · src/planning.js decisionControls()</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">19</text>
+</svg>

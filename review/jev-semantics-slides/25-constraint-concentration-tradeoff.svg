@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">哪些分散是必要防线，哪些会增加维护风险？</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="190" width="700" height="550" rx="28" fill="#E7F5F4" fill-opacity="1" stroke="#B8DEDA" stroke-width="3" filter="url(#shadow)"/>
+<text x="420" y="245" font-family="Noto Sans CJK SC" font-size="28" font-weight="900" fill="#087E8B" text-anchor="middle" letter-spacing="0">合理的分层防御</text>
+<circle cx="120" cy="308" r="14" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="120" y="315" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">✓</text>
+<text x="155" y="315" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">预测阶段</text>
+<text x="290" y="315" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">判断未来轨迹风险</text>
+<circle cx="120" cy="381" r="14" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="120" y="388" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">✓</text>
+<text x="155" y="388" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">选择阶段</text>
+<text x="290" y="388" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">决定哪些候选能交给 Jev</text>
+<circle cx="120" cy="454" r="14" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="120" y="461" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">✓</text>
+<text x="155" y="461" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">服务端</text>
+<text x="290" y="461" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">防止损坏或越权的输入/答案</text>
+<circle cx="120" cy="527" r="14" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="120" y="534" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">✓</text>
+<text x="155" y="534" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">异步边界</text>
+<text x="290" y="534" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">拒绝旧批次和过期结果</text>
+<circle cx="120" cy="600" r="14" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="120" y="607" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">✓</text>
+<text x="155" y="607" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">执行阶段</text>
+<text x="290" y="607" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">处理预测与现实之间的偏差</text>
+<rect x="830" y="190" width="700" height="550" rx="28" fill="#FDECEC" fill-opacity="1" stroke="#F3B7B5" stroke-width="3" filter="url(#shadow)"/>
+<text x="1180" y="245" font-family="Noto Sans CJK SC" font-size="28" font-weight="900" fill="#E45756" text-anchor="middle" letter-spacing="0">当前维护风险</text>
+<circle cx="880" cy="308" r="14" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="880" y="315" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">!</text>
+<text x="915" y="315" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">语义跨文件</text>
+<text x="1050" y="315" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">属性产生与消费位置分离</text>
+<circle cx="880" cy="381" r="14" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="880" y="388" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">!</text>
+<text x="915" y="388" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">规则重复</text>
+<text x="1050" y="388" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">碰撞与速度在多处重新表达</text>
+<circle cx="880" cy="454" r="14" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="880" y="461" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">!</text>
+<text x="915" y="461" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">契约隐式</text>
+<text x="1050" y="461" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">普通 JS 对象，无统一 schema</text>
+<circle cx="880" cy="527" r="14" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="880" y="534" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">!</text>
+<text x="915" y="534" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">原因不透明</text>
+<text x="1050" y="534" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">只能看到 false，看不到为何失败</text>
+<circle cx="880" cy="600" r="14" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="880" y="607" font-family="Noto Sans CJK SC" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">!</text>
+<text x="915" y="607" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">联动修改</text>
+<text x="1050" y="607" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#5D6873" text-anchor="start" letter-spacing="0">字段变化需同步 client/server/UI</text>
+<rect x="215" y="775" width="1170" height="55" rx="20" fill="#FFF4DF" fill-opacity="1" stroke="#F2D39A" stroke-width="2"/>
+<text x="800" y="811" font-family="Noto Sans CJK SC" font-size="22" font-weight="850" fill="#F59E0B" text-anchor="middle" letter-spacing="0">应集中“规则定义与解释”，而不是把所有算法塞进同一个大文件。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">Architecture assessment: layered enforcement is useful; policy and contracts need consolidation</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">25</text>
+</svg>

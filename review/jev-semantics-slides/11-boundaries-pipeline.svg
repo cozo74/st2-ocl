@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">boundaries：从几何采样到紧凑 JSON</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="205" width="430" height="155" rx="22" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="125" cy="257" r="28" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="265" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">1</text>
+<text x="170" y="258" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">道路多边形</text>
+<text x="170" y="301" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">localRoads</text>
+<line x1="510" y1="283" x2="552" y2="283" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="570" y="205" width="430" height="155" rx="22" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="625" cy="257" r="28" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="625" y="265" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">2</text>
+<text x="670" y="258" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">路线采样站</text>
+<text x="670" y="301" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">后方车长 + 当前 + 前方 12 点</text>
+<line x1="1010" y1="283" x2="1052" y2="283" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1070" y="205" width="430" height="155" rx="22" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="1125" cy="257" r="28" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1125" y="265" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">3</text>
+<text x="1170" y="258" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">横截面求交</text>
+<text x="1170" y="301" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">选择中心所在/最近连通路面</text>
+<path d="M1285,370 L1285,410 L570,410 L570,440" fill="none" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="70" y="445" width="430" height="155" rx="22" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="125" cy="497" r="28" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="125" y="505" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">4</text>
+<text x="170" y="498" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">自车坐标</text>
+<text x="170" y="541" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">center / left / right</text>
+<line x1="510" y1="523" x2="552" y2="523" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="570" y="445" width="430" height="155" rx="22" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="625" cy="497" r="28" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="625" y="505" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">5</text>
+<text x="670" y="498" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">折线简化</text>
+<text x="670" y="541" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">误差上限 0.1 m</text>
+<line x1="1010" y1="523" x2="1052" y2="523" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1070" y="445" width="430" height="155" rx="22" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="2" filter="url(#shadow)"/>
+<circle cx="1125" cy="497" r="28" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1125" y="505" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">6</text>
+<text x="1170" y="498" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">table 压缩</text>
+<text x="1170" y="541" font-family="Noto Sans CJK SC" font-size="19" font-weight="500" fill="#5D6873" text-anchor="start" letter-spacing="0">shared + columns + rows</text>
+<rect x="170" y="700" width="1260" height="102" rx="20" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="205" y="741" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#42C4D8" text-anchor="start" letter-spacing="0">示例</text>
+<text x="295" y="741" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="0">row 0</text>
+<text x="390" y="741" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="500" fill="#FFFFFF" text-anchor="start" letter-spacing="0">[0, 0, 0, -9, 0, 3, 0]</text>
+<text x="295" y="779" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="0">row 1</text>
+<text x="390" y="779" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="500" fill="#FFFFFF" text-anchor="start" letter-spacing="0">[52, 0, 52, -9, 52, 3, 52]</text>
+<text x="1180" y="760" font-family="Noto Sans CJK SC" font-size="19" font-weight="700" fill="#42C4D8" text-anchor="start" letter-spacing="0">直路只需端点</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/road-geometry.js:291–387 · src/jev-request.js boundaryRows()/table()</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">11</text>
+</svg>

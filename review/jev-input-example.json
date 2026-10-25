@@ -1,0 +1,229 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "driving_style": "Aggressive right-lane driver: favor fast useful progress. Stop only for imminent collision, a required line, or arrival. Follow queues without passing; close to 2m before stopping. Rear/oncoming/adjacent traffic alone is no reason to brake. Approach the line; stop 0.5m before it. Green or completed stop: proceed when your path is clear.",
+    "units": "m,s,m/s,deg; points=[right,ahead], negative ahead=behind. Table shared values apply to every row. Traffic heading:0=same direction,180=oncoming.",
+    "speed": 0,
+    "limit": 14,
+    "nav": {
+      "turn": "left",
+      "in_m": 131.8,
+      "remaining_m": 517.7,
+      "destination": [
+        -388,
+        135
+      ]
+    },
+    "road": {
+      "on_road": true,
+      "lane_offset": 0,
+      "lane_half_width": 3,
+      "body_width_length": [
+        1.9,
+        4.8
+      ],
+      "boundaries": {
+        "columns": [
+          "route_ahead",
+          "center_right",
+          "center_ahead",
+          "left_right",
+          "left_ahead",
+          "right_right",
+          "right_ahead"
+        ],
+        "rows": [
+          [
+            0,
+            0,
+            0,
+            -9,
+            0,
+            3,
+            0
+          ],
+          [
+            52,
+            0,
+            52,
+            -9,
+            52,
+            3,
+            52
+          ]
+        ]
+      },
+      "body_edge_clearance_rear_center_front": [
+        [
+          8.1,
+          2.1
+        ],
+        [
+          8.1,
+          2.1
+        ],
+        [
+          8.1,
+          2.1
+        ]
+      ]
+    },
+    "intersection": {
+      "control": "stop",
+      "signal": null,
+      "bumper_to_line": 119.5,
+      "entered": false,
+      "stop_completed": false
+    },
+    "traffic": {
+      "shared": {
+        "speed": 0,
+        "relative_forward_speed": 0
+      },
+      "columns": [
+        "id",
+        "type",
+        "right",
+        "ahead",
+        "heading"
+      ],
+      "rows": [
+        [
+          "vehicle-12",
+          "car",
+          -24.4,
+          -17,
+          90
+        ],
+        [
+          "pedestrian-9",
+          "pedestrian",
+          -10,
+          44.7,
+          -180
+        ],
+        [
+          "vehicle-6",
+          "car",
+          -54.6,
+          -11,
+          -90
+        ]
+      ]
+    },
+    "candidates": {
+      "horizon_s": 3,
+      "all_on_road": true,
+      "all_in_lane": true,
+      "shared": {
+        "crosses_line": false,
+        "stop_at_line": false
+      },
+      "columns": [
+        "speed",
+        "end_speed",
+        "progress",
+        "route_error",
+        "lane_error",
+        "heading_error",
+        "end_right",
+        "end_ahead",
+        "line_after"
+      ],
+      "rows": {
+        "v0": [
+          13.5,
+          13.5,
+          22.6,
+          0,
+          0,
+          0,
+          0,
+          22.6,
+          96.9
+        ],
+        "v1": [
+          13.8,
+          13.8,
+          22.7,
+          0,
+          0,
+          0,
+          0,
+          22.7,
+          96.8
+        ],
+        "v2": [
+          13.5,
+          13.5,
+          22.6,
+          0,
+          0,
+          0,
+          0,
+          22.6,
+          96.9
+        ],
+        "v3": [
+          13.2,
+          13.2,
+          22.5,
+          0.3,
+          0.4,
+          0.9,
+          -1.1,
+          22.5,
+          97
+        ],
+        "v4": [
+          12.3,
+          12.3,
+          22.1,
+          0,
+          0,
+          0,
+          -0.1,
+          22.1,
+          97.4
+        ],
+        "v5": [
+          13.8,
+          13.8,
+          22.7,
+          0,
+          0.1,
+          0.1,
+          0.1,
+          22.7,
+          96.8
+        ],
+        "v6": [
+          13.6,
+          13.6,
+          22.6,
+          0.4,
+          0.5,
+          0.7,
+          1.3,
+          22.6,
+          96.9
+        ]
+      }
+    }
+  },
+  "questions": {
+    "vector": {
+      "type": "choice",
+      "instructions": "Assuming drive, choose fastest useful progress with low route/lane error. Predictions include following and curve/section speed control. Keep the whole car on asphalt: negative clearance=off-road, null edges=unknown, preview end is not road end. Choose stop_at_line to approach then stop 0.5m before the line. Do not pick a faster crossing path.",
+      "criteria": {
+        "v0": null,
+        "v1": null,
+        "v2": null,
+        "v3": null,
+        "v4": null,
+        "v5": null,
+        "v6": null
+      }
+    }
+  }
+}

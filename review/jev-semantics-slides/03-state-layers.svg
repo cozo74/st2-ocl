@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">状态模型不是一个 JSON，而是三层派生视图</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="465.0" y="200" width="670" height="125" rx="26" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1" filter="url(#shadow)"/>
+<text x="800" y="238" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">① 内部世界真值</text>
+<text x="800" y="272" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="700" fill="#E5FBFF" text-anchor="middle" letter-spacing="0">Simulation</text>
+<text x="800" y="304" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">道路图、实体姿态、交通规则记忆、运行时状态</text>
+<line x1="800" y1="330" x2="800" y2="370" stroke="#087E8B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="535.0" y="340" width="530" height="125" rx="26" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1" filter="url(#shadow)"/>
+<text x="800" y="378" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">② 规划与观察</text>
+<text x="800" y="412" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="700" fill="#E5FBFF" text-anchor="middle" letter-spacing="0">decisionState / observation</text>
+<text x="800" y="444" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">局部道路、感知目标、导航、候选轨迹、遥测</text>
+<line x1="800" y1="470" x2="800" y2="510" stroke="#087E8B" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="605.0" y="480" width="390" height="125" rx="26" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1" filter="url(#shadow)"/>
+<text x="800" y="518" font-family="Noto Sans CJK SC" font-size="23" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">③ Jev 请求</text>
+<text x="800" y="552" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="700" fill="#E5FBFF" text-anchor="middle" letter-spacing="0">prepareJevRequest</text>
+<text x="800" y="584" font-family="Noto Sans CJK SC" font-size="17" font-weight="500" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">压缩表格、候选别名、需要模型回答的问题</text>
+<rect x="80" y="690" width="1440" height="105" rx="24" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="120" y="732" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#42C4D8" text-anchor="start" letter-spacing="0">权威状态</text>
+<text x="250" y="732" font-family="Noto Sans CJK SC" font-size="22" font-weight="650" fill="#FFFFFF" text-anchor="start" letter-spacing="0">只存在于 Simulation；Three.js 场景和 Jev JSON 都是它的投影。</text>
+<text x="120" y="773" font-family="Noto Sans CJK SC" font-size="21" font-weight="800" fill="#42C4D8" text-anchor="start" letter-spacing="0">设计意义</text>
+<text x="250" y="773" font-family="Noto Sans CJK SC" font-size="22" font-weight="650" fill="#FFFFFF" text-anchor="start" letter-spacing="0">渲染不能反向修改物理状态；模型也看不到完整世界真值。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/simulation.js Simulation / observation() / decisionState()</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">03</text>
+</svg>

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">建议：统一约束策略与 Schema，保留各阶段独立兜底</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="70" y="205" width="410" height="500" rx="28" fill="#E7F5F4" fill-opacity="1" stroke="#B8DEDA" stroke-width="3" filter="url(#shadow)"/>
+<text x="275" y="255" font-family="Noto Sans CJK SC" font-size="26" font-weight="900" fill="#087E8B" text-anchor="middle" letter-spacing="0">① 事实计算层</text>
+<rect x="115" y="315" width="320" height="60" rx="16" fill="#FFFFFF" fill-opacity="1" stroke="#087E8B" stroke-width="2"/>
+<text x="275" y="353" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="750" fill="#16202A" text-anchor="middle" letter-spacing="0">road-geometry</text>
+<rect x="115" y="405" width="320" height="60" rx="16" fill="#FFFFFF" fill-opacity="1" stroke="#087E8B" stroke-width="2"/>
+<text x="275" y="443" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="750" fill="#16202A" text-anchor="middle" letter-spacing="0">traffic-safety</text>
+<rect x="115" y="495" width="320" height="60" rx="16" fill="#FFFFFF" fill-opacity="1" stroke="#087E8B" stroke-width="2"/>
+<text x="275" y="533" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="750" fill="#16202A" text-anchor="middle" letter-spacing="0">collisions</text>
+<text x="120" y="615.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#5D6873" text-anchor="start" letter-spacing="0">只计算事实：距离、占用、冲突、碰撞；不决定能否选</text>
+<text x="120" y="640.65" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#5D6873" text-anchor="start" letter-spacing="0">择。</text>
+<rect x="595" y="175" width="410" height="560" rx="28" fill="#EFF3FF" fill-opacity="1" stroke="#2D5BFF" stroke-width="4" filter="url(#shadow)"/>
+<text x="800" y="230" font-family="Noto Sans CJK SC" font-size="27" font-weight="900" fill="#2D5BFF" text-anchor="middle" letter-spacing="0">② 统一约束策略层</text>
+<text x="800" y="270" font-family="Noto Sans Mono CJK SC" font-size="20" font-weight="800" fill="#2D5BFF" text-anchor="middle" letter-spacing="0">constraint-policy.js</text>
+<circle cx="645" cy="328" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="670" y="335" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">共享常量与 candidate schema</text>
+<circle cx="645" cy="391" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="670" y="398" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">evaluateCandidate()</text>
+<circle cx="645" cy="454" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="670" y="461" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">硬失败 / 警告 / penalty</text>
+<circle cx="645" cy="517" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="670" y="524" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">稳定 reason codes</text>
+<circle cx="645" cy="580" r="8" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="670" y="587" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#16202A" text-anchor="start" letter-spacing="0">stop / speed policy</text>
+<rect x="640" y="660" width="320" height="48" rx="18" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="691" font-family="Noto Sans CJK SC" font-size="19" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">唯一可解释的策略结果</text>
+<rect x="1120" y="205" width="410" height="500" rx="28" fill="#FFF4DF" fill-opacity="1" stroke="#F2D39A" stroke-width="3" filter="url(#shadow)"/>
+<text x="1325" y="255" font-family="Noto Sans CJK SC" font-size="26" font-weight="900" fill="#F59E0B" text-anchor="middle" letter-spacing="0">③ 独立信任边界</text>
+<rect x="1165" y="310" width="320" height="50" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="2"/>
+<text x="1325" y="342" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">server.validState</text>
+<rect x="1165" y="380" width="320" height="50" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="2"/>
+<text x="1325" y="412" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">decisionControls</text>
+<rect x="1165" y="450" width="320" height="50" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="2"/>
+<text x="1325" y="482" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">generation / expiry</text>
+<rect x="1165" y="520" width="320" height="50" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="2"/>
+<text x="1325" y="552" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">Simulation.step</text>
+<rect x="1165" y="590" width="320" height="50" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="2"/>
+<text x="1325" y="622" font-family="Noto Sans Mono CJK SC" font-size="18" font-weight="700" fill="#16202A" text-anchor="middle" letter-spacing="0">actual collision</text>
+<line x1="485" y1="455" x2="585" y2="455" stroke="#087E8B" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<line x1="1010" y1="455" x2="1110" y2="455" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<rect x="200" y="775" width="1200" height="58" rx="20" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="812" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">目标：一处定义约束语义，多处执行纵深防御；每次拒绝都能给出统一原因。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">Proposed design: shared schema + policy result + stage-specific guards</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">26</text>
+</svg>

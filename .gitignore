@@ -9,5 +9,5 @@ dist/
 .dev.vars*
 !.dev.vars.example
 artifacts/
-review/
+
 logs/*.json

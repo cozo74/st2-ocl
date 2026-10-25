@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">候选集合不是一次生成，而是逐层收缩</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<rect x="55" y="235" width="215" height="295" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#2D5BFF" stroke-width="3" filter="url(#shadow)"/>
+<rect x="55" y="235" width="215" height="66" rx="23" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="55" y="277" width="215" height="24" rx="0" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="162.5" y="278" font-family="Noto Sans CJK SC" font-size="21" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">生成池</text>
+<text x="162.5" y="340" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#2D5BFF" text-anchor="middle" letter-spacing="0">正常约 55</text>
+<text x="162.5" y="372" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#2D5BFF" text-anchor="middle" letter-spacing="0">脱困 11</text>
+<text x="79" y="405.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">采样与 3 s</text>
+<text x="79" y="432.55" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">rollout</text>
+<line x1="276" y1="383" x2="304" y2="371" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="310" y="303" width="215" height="295" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#42C4D8" stroke-width="3" filter="url(#shadow)"/>
+<rect x="310" y="303" width="215" height="66" rx="23" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="310" y="345" width="215" height="24" rx="0" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="417.5" y="346" font-family="Noto Sans CJK SC" font-size="21" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">展示 vectors</text>
+<text x="417.5" y="408" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#42C4D8" text-anchor="middle" letter-spacing="0">最多 12</text>
+<text x="334" y="473.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">可含探索性越线</text>
+<text x="334" y="500.55" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">或未来风险</text>
+<line x1="531" y1="451" x2="559" y2="303" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="565" y="235" width="215" height="295" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#087E8B" stroke-width="3" filter="url(#shadow)"/>
+<rect x="565" y="235" width="215" height="66" rx="23" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="565" y="277" width="215" height="24" rx="0" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="672.5" y="278" font-family="Noto Sans CJK SC" font-size="21" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">eligible moving</text>
+<text x="672.5" y="340" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#087E8B" text-anchor="middle" letter-spacing="0">硬过滤</text>
+<text x="589" y="405.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">非零速、可恢复</text>
+<text x="589" y="432.55" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">无临近碰撞</text>
+<line x1="786" y1="383" x2="814" y2="371" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="820" y="303" width="215" height="295" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#F59E0B" stroke-width="3" filter="url(#shadow)"/>
+<rect x="820" y="303" width="215" height="66" rx="23" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="820" y="345" width="215" height="24" rx="0" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="927.5" y="346" font-family="Noto Sans CJK SC" font-size="21" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">choice set</text>
+<text x="927.5" y="408" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#F59E0B" text-anchor="middle" letter-spacing="0">场景约束</text>
+<text x="844" y="473.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">上路、顺路线</text>
+<text x="844" y="500.55" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">排队兼容</text>
+<line x1="1041" y1="451" x2="1069" y2="303" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1075" y="235" width="215" height="295" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#21A179" stroke-width="3" filter="url(#shadow)"/>
+<rect x="1075" y="235" width="215" height="66" rx="23" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="1075" y="277" width="215" height="24" rx="0" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1182.5" y="278" font-family="Noto Sans CJK SC" font-size="21" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">Jev aliases</text>
+<text x="1182.5" y="340" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#21A179" text-anchor="middle" letter-spacing="0">v0…vN</text>
+<text x="1099" y="405.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">只发送</text>
+<text x="1099" y="432.55" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">可选择项</text>
+<line x1="1296" y1="383" x2="1324" y2="371" stroke="#2D5BFF" stroke-width="4" stroke-linecap="round" opacity="1" marker-end="url(#arrow-blue)"/>
+<rect x="1330" y="303" width="215" height="295" rx="24" fill="#FFFFFF" fill-opacity="1" stroke="#E45756" stroke-width="3" filter="url(#shadow)"/>
+<rect x="1330" y="303" width="215" height="66" rx="23" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="1330" y="345" width="215" height="24" rx="0" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="1437.5" y="346" font-family="Noto Sans CJK SC" font-size="21" font-weight="850" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">selected</text>
+<text x="1437.5" y="408" font-family="Noto Sans Mono CJK SC" font-size="22" font-weight="900" fill="#E45756" text-anchor="middle" letter-spacing="0">唯一一条</text>
+<text x="1354" y="473.0" font-family="Noto Sans CJK SC" font-size="19" font-weight="560" fill="#16202A" text-anchor="start" letter-spacing="0">控制由候选反推</text>
+<rect x="185" y="690" width="1230" height="110" rx="24" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="733" font-family="Noto Sans CJK SC" font-size="25" font-weight="850" fill="#42C4D8" text-anchor="middle" letter-spacing="0">关键区分：展示出来 ≠ 允许 Jev 选择</text>
+<text x="800" y="773" font-family="Noto Sans CJK SC" font-size="20" font-weight="600" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">探索轨迹帮助解释规划空间；真正的 choice set 由 candidateChoices() 再过滤。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/driving-plan.js createDrivingPlan() · src/planning.js candidateChoices()</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">17</text>
+</svg>

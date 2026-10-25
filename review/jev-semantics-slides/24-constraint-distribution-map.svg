@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity=".10"/></filter>
+<marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2D5BFF"/></marker>
+<marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#087E8B"/></marker>
+<marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#F59E0B"/></marker>
+</defs>
+<rect width="1600" height="900" fill="#F6F3EA"/>
+<rect x="0" y="0" width="18" height="900" fill="#087E8B"/>
+<text x="70" y="48" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#087E8B" text-anchor="start" letter-spacing="2">JEVPILOT · STRUCTURED DRIVING STATE</text>
+<text x="70" y="84" font-family="Noto Sans CJK SC" font-size="40" font-weight="800" fill="#16202A" text-anchor="start" letter-spacing="0">约束检查按生命周期分层，但分布在多个模块</text>
+<line x1="70" y1="145" x2="1530" y2="145" stroke="#D9D5CA" stroke-width="2" stroke-linecap="round" opacity="1"/>
+<text x="100" y="195" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#5D6873" text-anchor="start" letter-spacing="0">阶段</text>
+<text x="365" y="195" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#5D6873" text-anchor="start" letter-spacing="0">主要位置</text>
+<text x="865" y="195" font-family="Noto Sans CJK SC" font-size="20" font-weight="800" fill="#5D6873" text-anchor="start" letter-spacing="0">约束效果</text>
+<rect x="70" y="220" width="1460" height="70" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="1" filter="url(#shadow)"/>
+<rect x="70" y="220" width="14" height="70" rx="7" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="105" y="234" width="180" height="42" rx="21" fill="#087E8B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="195.0" y="262" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">事实计算</text>
+<text x="365" y="264" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">road-geometry / traffic-safety / collisions</text>
+<text x="865" y="264" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#16202A" text-anchor="start" letter-spacing="0">道路占用、间距、预测冲突、首次碰撞</text>
+<line x1="310" y1="292" x2="310" y2="304" stroke="#087E8B" stroke-width="3" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="70" y="308" width="1460" height="70" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="1"/>
+<rect x="70" y="308" width="14" height="70" rx="7" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="105" y="322" width="180" height="42" rx="21" fill="#2D5BFF" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="195.0" y="350" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">候选属性</text>
+<text x="365" y="352" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">driving-plan.js</text>
+<text x="865" y="352" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#16202A" text-anchor="start" letter-spacing="0">on-road、路线方向、排队兼容、碰撞标记</text>
+<line x1="310" y1="380" x2="310" y2="392" stroke="#2D5BFF" stroke-width="3" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="70" y="396" width="1460" height="70" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="1"/>
+<rect x="70" y="396" width="14" height="70" rx="7" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="105" y="410" width="180" height="42" rx="21" fill="#42C4D8" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="195.0" y="438" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">选择资格</text>
+<text x="365" y="440" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">planning.js</text>
+<text x="865" y="440" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#16202A" text-anchor="start" letter-spacing="0">moving 硬过滤、停车可用性、choice set</text>
+<line x1="310" y1="468" x2="310" y2="480" stroke="#42C4D8" stroke-width="3" stroke-linecap="round" opacity="1" marker-end="url(#arrow-teal)"/>
+<rect x="70" y="484" width="1460" height="70" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="1"/>
+<rect x="70" y="484" width="14" height="70" rx="7" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="105" y="498" width="180" height="42" rx="21" fill="#F59E0B" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="195.0" y="526" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">服务端边界</text>
+<text x="365" y="528" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">server/jev.js</text>
+<text x="865" y="528" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#16202A" text-anchor="start" letter-spacing="0">状态结构、范围、答案与被选轨迹</text>
+<line x1="310" y1="556" x2="310" y2="568" stroke="#F59E0B" stroke-width="3" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<rect x="70" y="572" width="1460" height="70" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="1"/>
+<rect x="70" y="572" width="14" height="70" rx="7" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="105" y="586" width="180" height="42" rx="21" fill="#21A179" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="195.0" y="614" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">异步一致性</text>
+<text x="365" y="616" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">main.js + decisionControls()</text>
+<text x="865" y="616" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#16202A" text-anchor="start" letter-spacing="0">batch、routeVersion、过期、controls 一致</text>
+<line x1="310" y1="644" x2="310" y2="656" stroke="#21A179" stroke-width="3" stroke-linecap="round" opacity="1" marker-end="url(#arrow-orange)"/>
+<rect x="70" y="660" width="1460" height="70" rx="15" fill="#FFFFFF" fill-opacity="1" stroke="#DDD7CC" stroke-width="1" filter="url(#shadow)"/>
+<rect x="70" y="660" width="14" height="70" rx="7" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<rect x="105" y="674" width="180" height="42" rx="21" fill="#E45756" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="195.0" y="702" font-family="Noto Sans CJK SC" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">执行期兜底</text>
+<text x="365" y="704" font-family="Noto Sans Mono CJK SC" font-size="19" font-weight="750" fill="#16202A" text-anchor="start" letter-spacing="0">simulation.js step()</text>
+<text x="865" y="704" font-family="Noto Sans CJK SC" font-size="19" font-weight="540" fill="#16202A" text-anchor="start" letter-spacing="0">实时限速、脱困阻挡、真实碰撞与违规</text>
+<rect x="210" y="765" width="1180" height="65" rx="22" fill="#102D35" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="800" y="806" font-family="Noto Sans CJK SC" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0">结论：不是随意散落，而是按阶段分层；但无法从单一入口看到约束全貌。</text>
+<text x="70" y="866" font-family="Noto Sans CJK SC" font-size="14" font-weight="400" fill="#5D6873" text-anchor="start" letter-spacing="0">src/road-geometry.js · traffic-safety.js · driving-plan.js · planning.js · server/jev.js · main.js · simulation.js</text>
+<text x="1530" y="866" font-family="Noto Sans CJK SC" font-size="16" font-weight="700" fill="#5D6873" text-anchor="end" letter-spacing="0">24</text>
+</svg>
