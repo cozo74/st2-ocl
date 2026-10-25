@@ -1,5 +1,5 @@
 import { performance } from "node:perf_hooks";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   CANDIDATE_COUNT,
@@ -155,10 +155,40 @@ export function jevMiddleware(env) {
   const logDir = join(process.cwd(), "logs");
   const saveSession = async (session) => {
     await mkdir(logDir, { recursive: true });
-    await writeFile(
-      join(logDir, `${session.id}.json`),
-      `${JSON.stringify(session.data, null, 2)}\n`,
-    );
+    const contents = `${JSON.stringify(session.data, null, 2)}\n`,
+      path = join(logDir, `${session.id}.json`),
+      pending = (session.writePromise || Promise.resolve()).then(() =>
+        writeFile(path, contents),
+      );
+    session.writePromise = pending.catch(() => {});
+    await pending;
+  };
+  const appendReplayFrame = (session, frame) => {
+    if (!frame || !Number.isFinite(frame.t) || !frame.ego) return;
+    if (!Array.isArray(session.data.frames)) session.data.frames = [];
+    if (!Array.isArray(session.data.decisions)) session.data.decisions = [];
+    if (!Array.isArray(session.data.plans)) session.data.plans = [];
+    if (
+      frame.decision &&
+      frame.decision_revision !== session.lastDecisionRevision
+    ) {
+      session.data.decisions.push(frame.decision);
+      session.lastDecisionRevision = frame.decision_revision;
+    }
+    if (frame.plan && frame.plan_revision !== session.lastPlanRevision) {
+      session.data.plans.push(frame.plan);
+      session.lastPlanRevision = frame.plan_revision;
+    }
+    session.data.frames.push({
+      t: frame.t,
+      simulation_time: frame.simulation_time,
+      distance: frame.distance,
+      ego: frame.ego,
+      traffic: frame.traffic || [],
+      pedestrians: frame.pedestrians || [],
+      decision_index: session.data.decisions.length - 1,
+      plan_index: session.data.plans.length - 1,
+    });
   };
   const validSessionId = (id) =>
     typeof id === "string" && /^[a-f0-9-]{36}$/i.test(id);
@@ -187,17 +217,67 @@ export function jevMiddleware(env) {
           output_per_million: Number(env.JEV_OUTPUT_PRICE ?? 0),
         },
       });
+    if (path === "/api/recordings" && req.method === "GET") {
+      try {
+        const files = (await readdir(logDir)).filter((name) =>
+          /^[a-f0-9-]{36}\.json$/i.test(name),
+        );
+        const recordings = [];
+        for (const file of files) {
+          try {
+            const data = JSON.parse(await readFile(join(logDir, file), "utf8"));
+            if (!data.frames?.length && !data.calls?.length) continue;
+            recordings.push({
+              id: data.session_id,
+              started_at: data.started_at,
+              ended_at: data.ended_at,
+              seed: data.seed,
+              environment: data.environment,
+              duration_s: data.frames.at(-1).t ?? 0,
+              frame_count: data.frames?.length || 0,
+              call_count: data.calls?.length || 0,
+              replayable: !!data.frames?.length,
+            });
+          } catch {}
+        }
+        recordings.sort((a, b) => b.started_at.localeCompare(a.started_at));
+        return send(200, { recordings });
+      } catch {
+        return send(200, { recordings: [] });
+      }
+    }
+    const recordingMatch = path.match(/^\/api\/recordings\/([a-f0-9-]{36})$/i);
+    if (recordingMatch && req.method === "GET") {
+      try {
+        const data = await readFile(
+          join(logDir, `${recordingMatch[1]}.json`),
+          "utf8",
+        );
+        return send(200, JSON.parse(data));
+      } catch {
+        return send(404, { error: "Recording not found" });
+      }
+    }
     if (
-      ["/api/jev-session/start", "/api/jev-session/end"].includes(path) &&
+      [
+        "/api/jev-session/start",
+        "/api/jev-session/frames",
+        "/api/jev-session/end",
+      ].includes(path) &&
       req.method === "POST"
     ) {
       let body = "";
-      for await (const chunk of req) body += chunk;
+      for await (const chunk of req) {
+        body += chunk;
+        if (body.length > 2_000_000)
+          return send(413, { error: "Recording chunk is too large" });
+      }
+      const payload = JSON.parse(body);
       const {
         session_id: id,
         started_at: startedAt,
         ended_at: endedAt,
-      } = JSON.parse(body);
+      } = payload;
       if (!validSessionId(id))
         return send(400, { error: "Invalid session id" });
       let session = sessions.get(id);
@@ -209,11 +289,22 @@ export function jevMiddleware(env) {
             started_at: startedAt || endedAt || new Date().toISOString(),
             ended_at: null,
             calls: [],
+            frames: [],
+            decisions: [],
+            plans: [],
+            seed: payload.seed,
+            environment: payload.environment,
           },
         };
         sessions.set(id, session);
       }
       if (path.endsWith("/end"))
+        appendReplayFrame(session, payload.final_frame);
+      if (path.endsWith("/frames")) {
+        for (const key of ["frames", "decisions", "plans"])
+          if (Array.isArray(payload[key]))
+            session.data[key].push(...payload[key]);
+      } else if (path.endsWith("/end"))
         session.data.ended_at = endedAt || new Date().toISOString();
       await saveSession(session);
       return send(200, { ok: true });
@@ -246,6 +337,9 @@ export function jevMiddleware(env) {
         state,
         session_id: id,
         session_started_at: startedAt,
+        session_seed: seed,
+        session_environment: environment,
+        replay_frame: replayFrame,
       } = JSON.parse(body);
       if (!validState(state))
         return send(400, {
@@ -263,11 +357,17 @@ export function jevMiddleware(env) {
               started_at: startedAt || new Date().toISOString(),
               ended_at: null,
               calls: [],
+              frames: [],
+              decisions: [],
+              plans: [],
+              seed,
+              environment,
             },
           };
           sessions.set(id, session);
         }
       }
+      if (session) appendReplayFrame(session, replayFrame);
       const call = {
         started_at: new Date().toISOString(),
         input: prepareJevRequest(state).request,

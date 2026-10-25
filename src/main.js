@@ -6,7 +6,7 @@ import {
   Video,
   Pause,
   Play,
-  Map,
+  Map as MapIcon,
   Maximize,
   Minimize,
   Sparkles,
@@ -49,7 +49,7 @@ const icons = {
   Video,
   Pause,
   Play,
-  Map,
+  Map: MapIcon,
   Maximize,
   Minimize,
   Sparkles,
@@ -90,6 +90,8 @@ let configured = false,
   lastDecision = null,
   lastInput = null,
   jevSession = null,
+  recording = null,
+  replay = { active: false, paused: false, time: 0, data: null, lastPlan: -1 },
   lastContext = null,
   lastApplied = 0,
   nextDecision = 0,
@@ -114,7 +116,7 @@ const keys = new Set(),
   };
 $("app").innerHTML = `
 <main class="drive-area" aria-label="3D driving simulator"><canvas id="world-canvas" aria-label="Interactive three-dimensional driving world"></canvas><div id="vector-labels" aria-label="Jev motion vector probabilities"></div></main>
-<header class="topbar glass"><a href="/" class="brand" aria-label="JevPilot by Standard Agents"><img class="brand-mark" src="/brand/standard-agents-mark.svg" alt=""/><b>JevPilot</b></a><div class="world-picker"><select id="world-select" aria-label="World environment"><option value="city">Skyline City</option><option value="town">Small town</option><option value="highway">Interstate 08</option></select><button id="new-world" title="Refresh world" aria-label="Refresh world">${icon("rotate-cw")}</button><a id="github-link" href="https://github.com/standardagents/jevpilot" target="_blank" rel="noopener noreferrer" aria-label="View JevPilot on GitHub (opens in a new tab)" title="View on GitHub">${icon("github")}</a></div></header>
+<header class="topbar glass"><a href="/" class="brand" aria-label="JevPilot by Standard Agents"><img class="brand-mark" src="/brand/standard-agents-mark.svg" alt=""/><b>JevPilot</b></a><div class="world-picker"><select id="world-select" aria-label="World environment"><option value="city">Skyline City</option><option value="town">Small town</option><option value="highway">Interstate 08</option></select><button id="new-world" title="Refresh world" aria-label="Refresh world">${icon("rotate-cw")}</button><button id="open-replays" class="replay-open">Replays</button><a id="github-link" href="https://github.com/standardagents/jevpilot" target="_blank" rel="noopener noreferrer" aria-label="View JevPilot on GitHub (opens in a new tab)" title="View on GitHub">${icon("github")}</a></div></header>
 <div class="navigation-hud"><div class="navigation-card glass"><span id="turn-icon">${icon("arrow-up")}</span><div><strong id="next-maneuver">Continue straight</strong><span id="turn-distance"></span></div><span class="nav-divider"></span><span id="remaining"></span><button id="map-toggle" aria-label="Toggle route map" aria-pressed="true" title="Hide route map">${icon("map")}</button></div>
 <div id="minimap" class="minimap glass"><div class="minimap-toolbar" role="toolbar" aria-label="Minimap controls"><button id="map-drag" aria-label="Move minimap" title="Move minimap · drag or use arrow keys">${icon("grip")}</button><div><button id="map-zoom-out" aria-label="Zoom out" title="Zoom out">${icon("minus")}</button><button id="map-zoom-in" aria-label="Zoom in" title="Zoom in">${icon("plus")}</button><button id="map-reset" aria-label="Reset minimap" title="Reset map position, zoom and following">${icon("rotate-ccw")}</button></div></div><canvas id="map-canvas" width="380" height="310" aria-label="Route map. Drag to pan, scroll to zoom, double-click to follow the car."></canvas></div></div>
 <div id="paused-overlay" hidden><div class="glass"><span>${icon("pause")} Paused</span><button id="resume" class="primary">Resume driving</button></div></div>
@@ -124,6 +126,8 @@ $("app").innerHTML = `
 <dialog id="credit-dialog" aria-labelledby="credit-title"><span class="eyebrow">THANKS FOR TAKING A DRIVE</span><h2 id="credit-title">That's your free lap.</h2><p>Your $0.25 of Jev play credit has been used. You can keep exploring with manual controls.</p><button id="credit-close" class="primary">Keep driving manually</button><a href="https://standardagents.ai/" target="_blank" rel="noopener noreferrer">Explore Standard Agents ↗</a></dialog>
 <div id="toast" role="status" hidden></div>
 <dialog id="json-dialog"><div class="json-header"><div>${icon("braces")}<strong>Under the hood</strong><span id="json-live">LIVE · 4 Hz</span></div><button id="close-json" aria-label="Close JSON inspector">${icon("x")}</button></div><div class="json-toolbar"><div class="json-tabs"><button data-tab="request" class="active">Jev input</button><button data-tab="sensor">Perception</button><button data-tab="world">Full world</button><button data-tab="decision">Response</button></div><div class="json-actions"><button id="freeze-json">Freeze</button><button id="copy-json" aria-label="Copy displayed JSON">${icon("copy")} <span id="copy-json-label" aria-live="polite">Copy</span></button><button id="download-json">${icon("download")} Download</button></div></div><p id="json-description">Exact Jev API payload, including instructions and offered choices. Full geometry and control details stay local.</p><pre id="json-content"></pre></dialog>
+<dialog id="replay-dialog"><div class="replay-heading"><div><span class="eyebrow">JEV RECORDINGS</span><h2>Replay a drive</h2></div><button id="close-replays" aria-label="Close replay browser">${icon("x")}</button></div><label for="recording-select">Recorded sessions</label><select id="recording-select"><option value="">Loading recordings…</option></select><p id="replay-empty" hidden>No recordings yet. Engage Jev to record a drive.</p><p id="replay-note" hidden></p><button id="play-recording" class="primary" disabled>Play recording</button></dialog>
+<div id="replay-bar" class="replay-bar glass" hidden><button id="replay-toggle" aria-label="Pause replay">Pause</button><input id="replay-seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Replay position"/><span id="replay-time">0:00 / 0:00</span><details><summary>Latest Jev decision</summary><pre id="replay-decision"></pre></details><button id="replay-exit">Exit replay</button></div>
 <dialog id="help-dialog"><button id="close-help" class="dialog-close" aria-label="Close help">${icon("x")}</button><span class="eyebrow">YOUR NEXT DRIVE</span><h2>Take the wheel.</h2><p class="touch-help">Use the thumbstick to steer. Push up to accelerate, pull down to brake and reverse. Release to coast; hold Brake to stop.</p><div class="help-keys"><span><kbd>W / ↑</kbd> Hold accelerator</span><span><kbd>S / ↓</kbd> Brake / reverse</span><span><kbd>A / D</kbd> Steer</span><span><kbd>SPACE</kbd> Brake</span><span><kbd>J</kbd> Jev autopilot</span><span><kbd>C</kbd> Camera</span><span><kbd>P</kbd> Pause</span><span><kbd>?</kbd> Keyboard help</span></div><p>Drag the scene to orbit in Chase or Bird’s eye; drag to look around in Driver view. Scroll to zoom outside; double-click to recenter. Tap A/D for small corrections; hold for a sharper turn and release to recenter. Hold W to accelerate; release to coast with drag. S brakes, then reverses once stopped. Space applies the brake. Autopilot sets target speed directly.</p><p>The bright blue line is Jev's selected three-second plan. Use Candidates to see the sampled paths: forward in blue/cyan, reverse in purple, lane departures in amber, and predicted collisions in orange. Choice probabilities are available in the JSON inspector. The safety brake can reduce speed for a missed hazard; interventions are shown beside the autopilot button.</p><p class="asset-credits">Vehicle: <a href="https://sketchfab.com/3d-models/tesla-model-y-2021-c0a86cac582d4b33aba0fb1b1912d970" target="_blank" rel="noreferrer">Tesla Model Y 2021</a> by 763468712, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>. Geometry adapted by Tina 3D Tesla; optimized, re-materialed, and wheel-rigged for JevPilot. Tree, shrub, streetlight, surface textures and sky: <a href="https://polyhaven.com" target="_blank" rel="noreferrer">Poly Haven</a>, CC0.</p><p>Driving keys take back control. Use the JSON button for live inputs, full world state, probabilities, and session telemetry.</p></dialog>`;
 $("app").insertAdjacentHTML(
   "beforeend",
@@ -251,6 +255,77 @@ function toast(text, type = "info") {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => ($("toast").hidden = true), 4200);
 }
+function replaySnapshot(session = recording) {
+  if (!session) return null;
+  const p = sim.player;
+  return {
+    t: sim.time - session.startSim,
+    simulation_time: sim.time,
+    distance: sim.distance,
+    ego: {
+      x: p.x,
+      z: p.z,
+      heading: p.heading,
+      speed: p.speed,
+      target: p.target,
+      steering: p.steering,
+      steeringProgress: p.steeringProgress,
+      s: p.s,
+    },
+    traffic: sim.traffic.map(({ id, x, z, heading }) => ({
+      id,
+      x,
+      z,
+      heading,
+    })),
+    pedestrians: sim.pedestrians.map(({ id, x, z, heading, walking }) => ({
+      id,
+      x,
+      z,
+      heading,
+      walking,
+    })),
+    decision_revision: session.latestDecision,
+    decision: session.decisions.at(session.latestDecision) ?? null,
+    plan_revision: session.latestPlan,
+    plan: session.plans.at(session.latestPlan) ?? null,
+  };
+}
+function finishRecording() {
+  if (!recording) return;
+  const session = recording;
+  recording = null;
+  const endedAt = new Date().toISOString();
+  fetch("/api/jev-session/end", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: session.id,
+      ended_at: endedAt,
+      final_frame: replaySnapshot(session),
+    }),
+    keepalive: true,
+  }).catch(() => {});
+}
+function recordJevDecision(state, data) {
+  if (!recording) return;
+  const plan = sim.lastPlan,
+    choice = data.selection?.choice,
+    projection = plan?.projections?.[choice],
+    candidate = plan?.vectors?.[choice];
+  recording.decisions.push({ time: sim.time - recording.startSim, ...data });
+  recording.latestDecision = recording.decisions.length - 1;
+  if (projection && candidate) {
+    recording.plans.push({
+      origin: plan.origin,
+      choice,
+      vector: candidate,
+      projection,
+    });
+    recording.latestPlan = recording.plans.length - 1;
+  }
+  recording.latestInput = state;
+}
 function refreshWorld() {
   const w = sim.world;
   $("world-select").value = w.type;
@@ -260,17 +335,8 @@ function refreshWorld() {
 function syncPilot() {
   const on = sim.autopilot;
   if (!on && jevSession) {
-    const session = jevSession;
     jevSession = null;
-    fetch("/api/jev-session/end", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: session.id,
-        ended_at: new Date().toISOString(),
-      }),
-      keepalive: true,
-    }).catch(() => {});
+    finishRecording();
   }
   $("autopilot").setAttribute("aria-checked", String(on));
   $("pilot-label").textContent = on ? "Jev engaged" : "Engage Jev";
@@ -281,7 +347,7 @@ function syncPilot() {
 }
 
 function setPilot(on) {
-  if (loading) return;
+  if (loading || replay.active) return;
   touch.reset();
   if (on && playCredits?.exhausted) {
     $("credit-dialog").showModal();
@@ -293,16 +359,30 @@ function setPilot(on) {
   }
   if (sim.crash || (on && sim.complete)) return;
   if (on && !sim.autopilot) {
+    const startedAt = new Date().toISOString();
     jevSession = {
       id: crypto.randomUUID(),
-      startedAt: new Date().toISOString(),
+      startedAt,
+    };
+    recording = {
+      id: jevSession.id,
+      seed: sim.world.seed,
+      environment: sim.world.type,
+      startSim: sim.time,
+      decisions: [],
+      plans: [],
+      latestDecision: -1,
+      latestPlan: -1,
+      flushing: null,
     };
     fetch("/api/jev-session/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         session_id: jevSession.id,
-        started_at: jevSession.startedAt,
+        started_at: startedAt,
+        seed: sim.world.seed,
+        environment: sim.world.type,
       }),
       keepalive: true,
     }).catch(() => {});
@@ -322,6 +402,7 @@ function setPilot(on) {
 }
 async function resetWorld(seed = sim.world.seed, type = sim.world.type) {
   if (loading) return;
+  if (replay.active) stopReplay();
   loading = true;
   touch.reset();
   showLoading("Building your next drive…");
@@ -354,6 +435,184 @@ async function resetWorld(seed = sim.world.seed, type = sim.world.type) {
     loadingFailed(error);
   }
 }
+async function loadRecordings() {
+  const select = $("recording-select");
+  select.replaceChildren(new Option("Loading recordings…", ""));
+  $("play-recording").disabled = true;
+  try {
+    const { recordings } = await (await fetch("/api/recordings")).json();
+    select.replaceChildren();
+    for (const item of recordings) {
+      const date = new Date(item.started_at).toLocaleString();
+      const detail = item.replayable
+        ? `${formatReplayTime(item.duration_s)} · ${item.frame_count} frames`
+        : `Jev log only · ${item.call_count} calls · no replay frames`;
+      const option = new Option(
+        `${date} · ${item.environment || "unknown"} · ${detail}`,
+        item.id,
+      );
+      option.dataset.replayable = String(item.replayable);
+      select.add(option);
+    }
+    $("replay-empty").hidden = recordings.length > 0;
+    const firstReplayable = [...select.options].find(
+      (option) => option.dataset.replayable === "true",
+    );
+    if (firstReplayable) select.value = firstReplayable.value;
+    $("play-recording").disabled = !firstReplayable;
+    $("replay-note").hidden = !!firstReplayable || recordings.length === 0;
+    $("replay-note").textContent = firstReplayable
+      ? ""
+      : "这条旧记录只有 Jev 请求和输出，没有车辆动画帧，无法补录成回放。后续新录制会保存动画数据。";
+  } catch {
+    select.replaceChildren(new Option("Could not load recordings", ""));
+    $("replay-empty").hidden = false;
+  }
+}
+function formatReplayTime(seconds) {
+  const value = Math.max(0, seconds || 0),
+    minutes = Math.floor(value / 60),
+    remainder = (value % 60).toFixed(1).padStart(4, "0");
+  return `${minutes}:${remainder}`;
+}
+function interpolateNumber(a, b, alpha) {
+  return a + (b - a) * alpha;
+}
+function applyReplayFrame() {
+  const frames = replay.data?.frames;
+  if (!frames?.length) return;
+  let right = frames.findIndex((frame) => frame.t >= replay.time);
+  if (right < 0) right = frames.length - 1;
+  const left = Math.max(0, right - 1),
+    a = frames[left],
+    b = frames[right],
+    alpha = b.t > a.t ? (replay.time - a.t) / (b.t - a.t) : 0,
+    ego = sim.player;
+  for (const key of [
+    "x",
+    "z",
+    "speed",
+    "target",
+    "steering",
+    "steeringProgress",
+    "s",
+  ])
+    ego[key] = interpolateNumber(
+      a.ego[key] ?? 0,
+      b.ego[key] ?? a.ego[key] ?? 0,
+      alpha,
+    );
+  let headingDelta =
+    ((b.ego.heading - a.ego.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  ego.heading = a.ego.heading + headingDelta * alpha;
+  sim.time = interpolateNumber(a.simulation_time, b.simulation_time, alpha);
+  sim.distance = interpolateNumber(a.distance, b.distance, alpha);
+  const interpolateActors = (source, firstRecords, secondRecords) => {
+    const map = new Map(secondRecords.map((actor) => [actor.id, actor]));
+    for (const actor of source) {
+      const first = firstRecords.find((v) => v.id === actor.id),
+        second = map.get(actor.id);
+      if (!first || !second) continue;
+      actor.x = interpolateNumber(first.x, second.x, alpha);
+      actor.z = interpolateNumber(first.z, second.z, alpha);
+      if (first.heading != null && second.heading != null)
+        actor.heading = interpolateNumber(first.heading, second.heading, alpha);
+    }
+  };
+  interpolateActors(sim.traffic, a.traffic || [], b.traffic || []);
+  interpolateActors(sim.pedestrians, a.pedestrians || [], b.pedestrians || []);
+  sim.autopilot = true;
+  sim.paused = replay.paused;
+  const decisionIndex = b.decision_index ?? a.decision_index,
+    planIndex = b.plan_index ?? a.plan_index,
+    decision = replay.data.decisions?.[decisionIndex];
+  if (decision)
+    $("replay-decision").textContent = JSON.stringify(decision, null, 2);
+  if (planIndex >= 0 && planIndex !== replay.lastPlan) {
+    const saved = replay.data.plans?.[planIndex];
+    if (saved) {
+      const id = saved.choice;
+      const plan = {
+        origin: saved.origin,
+        vectors: { [id]: saved.vector },
+        projections: { [id]: saved.projection },
+        eligible: { [id]: true },
+      };
+      scene.vectors.setAnswer({ choice: id, probabilities: { [id]: 1 } }, plan);
+      replay.lastPlan = planIndex;
+    }
+  } else if (planIndex >= 0) {
+    scene.vectors.received = performance.now();
+  }
+  $("replay-seek").value = replay.time;
+  $("replay-time").textContent =
+    `${formatReplayTime(replay.time)} / ${formatReplayTime(replay.duration)}`;
+  $("replay-toggle").textContent = replay.paused ? "Play" : "Pause";
+  $("replay-toggle").setAttribute(
+    "aria-label",
+    replay.paused ? "Play replay" : "Pause replay",
+  );
+}
+async function startReplay() {
+  const id = $("recording-select").value;
+  if (!id) return;
+  const data = await (await fetch(`/api/recordings/${id}`)).json();
+  if (!data.frames?.length) return;
+  $("replay-dialog").close();
+  await resetWorld(data.seed, data.environment);
+  replay = {
+    active: true,
+    paused: false,
+    time: data.frames[0].t,
+    duration: data.frames.at(-1).t,
+    data,
+    lastPlan: -1,
+  };
+  scene.mode = "chase";
+  scene.snap = true;
+  lastNow = performance.now();
+  $("replay-seek").max = replay.duration;
+  $("replay-bar").hidden = false;
+  applyReplayFrame();
+  syncPilot();
+}
+function stopReplay() {
+  replay.active = false;
+  replay.data = null;
+  replay.paused = false;
+  sim.autopilot = false;
+  sim.paused = false;
+  sim.player.target = 0;
+  scene.vectors.clear();
+  $("replay-bar").hidden = true;
+  syncPilot();
+}
+$("open-replays").onclick = async () => {
+  await loadRecordings();
+  $("replay-dialog").showModal();
+};
+$("close-replays").onclick = () => $("replay-dialog").close();
+$("recording-select").onchange = () => {
+  const replayable =
+    $("recording-select").selectedOptions[0]?.dataset.replayable === "true";
+  $("play-recording").disabled = !replayable;
+  $("replay-note").hidden = replayable;
+  $("replay-note").textContent = replayable
+    ? ""
+    : "这条记录没有车辆动画帧，无法回放。之后录制的 Jev 会话可以回放。";
+};
+$("play-recording").onclick = () =>
+  startReplay().catch((error) => toast(error.message, "error"));
+$("replay-toggle").onclick = () => {
+  replay.paused = !replay.paused;
+  applyReplayFrame();
+};
+$("replay-seek").oninput = () => {
+  replay.time = Number($("replay-seek").value);
+  replay.paused = true;
+  applyReplayFrame();
+};
+$("replay-exit").onclick = stopReplay;
 async function finishLoading() {
   showLoading("Loading car and scenery…");
   await scene.ready;
@@ -680,6 +939,7 @@ async function decide() {
   if (
     loading ||
     busy ||
+    replay.active ||
     !sim.autopilot ||
     sim.paused ||
     document.hidden ||
@@ -719,6 +979,9 @@ async function decide() {
           request_id: crypto.randomUUID(),
           session_id: jevSession?.id,
           session_started_at: jevSession?.startedAt,
+          session_seed: recording?.seed,
+          session_environment: recording?.environment,
+          replay_frame: replaySnapshot(),
         }),
         signal: AbortSignal.timeout(12000),
       }),
@@ -775,6 +1038,7 @@ async function decide() {
     if (lastApplied) tally.intervals.push(now - lastApplied);
     if (tally.intervals.length > 20) tally.intervals.shift();
     lastDecision = { ...data, received_at_simulation_s: sim.time };
+    recordJevDecision(state, lastDecision);
     lastContext = state;
     lastApplied = now;
     errors = 0;
@@ -983,7 +1247,13 @@ function animate(now) {
   lastNow = now;
   if (document.hidden || loading) return;
   touch.sync();
-  if (!sim.paused && !sim.crash) {
+  if (replay.active) {
+    if (!replay.paused) {
+      replay.time = Math.min(replay.duration, replay.time + dt);
+      if (replay.time >= replay.duration) replay.paused = true;
+    }
+    applyReplayFrame();
+  } else if (!sim.paused && !sim.crash) {
     if (!sim.autopilot) {
       let steer = 0;
       const left = keys.has("KeyA") || keys.has("ArrowLeft");
