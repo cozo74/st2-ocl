@@ -56,6 +56,25 @@ const browser = await chromium.launch({ headless: true, executablePath: process.
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--ignore-gpu-blocklist', '--enable-gpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] });
 let next = 0, done = 0, failed = 0;
 const started = Date.now();
+const writtenDiagnosticImages = new Set();
+function persistDiagnosticImages(result, job) {
+  const events = result.diagnostic_events ?? [];
+  const episode = `${result.job_index ?? 'job'}-${job.type ?? 'world'}-${job.seed ?? 'unknown'}`.replace(/[^a-zA-Z0-9_.-]/g, '_');
+  for (const event of events) for (const frame of event.image_frames_before_event ?? []) {
+    for (const camera of ['wide', 'tele']) {
+      const key = `${episode}/${frame.frame_id}-${camera}`, field = `${camera}_png_base64`;
+      if (!frame[field]) continue;
+      const relative = path.join('diagnostics', episode, `${frame.frame_id}-${camera}.png`), target = path.join(out, relative);
+      if (!writtenDiagnosticImages.has(key)) {
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, Buffer.from(frame[field], 'base64'));
+        writtenDiagnosticImages.add(key);
+      }
+      frame[`${camera}_png`] = relative.split(path.sep).join('/');
+      delete frame[field];
+    }
+  }
+}
 async function worker(w) {
   const page = await browser.newPage({ viewport: { width: 700, height: 420 }, deviceScaleFactor: 1 });
   const errors = [];
@@ -68,6 +87,7 @@ async function worker(w) {
     try { result = await page.evaluate((cfg) => (cfg.realtime ? window.drivejev.runRealtime(cfg) : window.drivejev.runEpisode(cfg)), job); }
     catch (error) { result = { error: String(error).slice(0, 2000), config: job }; failed++; }
     Object.assign(result, { job_index: index, worker: w, page_errors: errors.splice(0) });
+    persistDiagnosticImages(result, job);
     fs.writeSync(episodes, JSON.stringify(result) + '\n');
     done++;
     const brief = result.error ? `ERROR ${result.error.slice(0, 160)}` : `${job.type}/${job.seed} arrived=${result.arrived} crash=${!!result.crash} violations=${result.violations + result.front_required_stop_violations} t=${result.sim_time_s.toFixed(1)}s`;

@@ -102,13 +102,74 @@ function recordBehaviorInterval(rows, selectedCandidate, accepted, source) {
     maneuver_id: ex.maneuver?.maneuver_id ?? null, action_type: ex.maneuver?.action_type ?? null,
     maneuver_status: ex.maneuver?.status ?? null, target_id: ex.maneuver?.target_id ?? null, ego: egoSnapshot() });
 }
+function createIncidentLog() {
+  const decisions = [], imageFrames = new Map(), events = [];
+  let violationsSeen = 0, frontEventsSeen = 0, collisionSeen = false;
+  const rememberDecision = ({ obs, shot, history, result, acceptedResult, source, latencyMs, state }) => {
+    const frameId = shot ? `step-${obs.meta.step_id}` : null, historyFrameId = history ? `step-${history.step}` : null;
+    if (shot) imageFrames.set(frameId, { frame_id: frameId, sim_time_s: obs.meta.sim_time, wide_png_base64: shot.wide, tele_png_base64: shot.tele });
+    if (history) imageFrames.set(historyFrameId, { frame_id: historyFrameId, sim_time_s: history.step * DT, wide_png_base64: history.wide, tele_png_base64: history.tele });
+    const decision = { sim_time_s: recordRound(obs.meta.sim_time), step_id: obs.meta.step_id, observation_id: obs.observation_id,
+      source, inputs: { request: { schema_version: 'drivejev-online-1.1', arm: config.arm ?? null, obs_schema: config.obs_schema },
+        student_obs: obs.student_obs, candidates: obs.candidates, rule_truth: obs.meta.teacher_state, state },
+      output: result, application: { accepted: acceptedResult.accepted, reason: acceptedResult.reason ?? null,
+        selected_candidate_id: result.candidate_id ?? null, executing_action: ex.maneuver?.action_type ?? null,
+        maneuver_id: ex.maneuver?.maneuver_id ?? null }, latency_ms: recordRound(latencyMs),
+      image_inputs: shot ? [{ camera: 'front', relative_time_s: -0.5, frame_id: historyFrameId },
+        { camera: 'front', relative_time_s: 0, frame_id: frameId }, { camera: 'front_tele', relative_time_s: 0, frame_id: frameId }] : [] };
+    decisions.push(decision);
+    // A realtime reply may arrive after its event was captured; attach it to that event window too.
+    for (const event of events) if (decision.sim_time_s >= event.time_s - 6 && decision.sim_time_s <= event.time_s + 0.001 &&
+      !event.decision_trace_before_event.some((d) => d.observation_id === decision.observation_id)) {
+      event.decision_trace_before_event.push(decision);
+      event.decision_trace_before_event.sort((a, b) => a.sim_time_s - b.sim_time_s);
+      const ids = new Set(event.image_frames_before_event.map((f) => f.frame_id));
+      for (const input of decision.image_inputs) if (input.frame_id && !ids.has(input.frame_id) && imageFrames.has(input.frame_id)) {
+        event.image_frames_before_event.push(imageFrames.get(input.frame_id)); ids.add(input.frame_id);
+      }
+    }
+    const cutoff = sim.time - 8;
+    while (decisions.length && decisions[0].sim_time_s < cutoff) decisions.shift();
+    for (const [id, frame] of imageFrames) if (frame.sim_time_s < cutoff) imageFrames.delete(id);
+  };
+  const addEvent = (kind, event, time) => {
+    const selected = decisions.filter((d) => d.sim_time_s >= time - 6 && d.sim_time_s <= time + 0.001);
+    const ids = new Set(selected.flatMap((d) => d.image_inputs.map((x) => x.frame_id).filter(Boolean)));
+    events.push({ kind, time_s: recordRound(time), event, decision_trace_before_event: selected,
+      image_frames_before_event: [...ids].map((id) => imageFrames.get(id)).filter(Boolean), state_at_capture: ex.diagnosticSnapshot() });
+  };
+  const collect = () => {
+    while (violationsSeen < ex.violationEvents.length) {
+      const e = ex.violationEvents[violationsSeen++]; addEvent('simulation_violation', e, e.sim_time_s);
+    }
+    while (frontEventsSeen < ex.frontBumperEvents.length) {
+      const e = ex.frontBumperEvents[frontEventsSeen++]; addEvent('front_bumper_crossing', e, e.sim_time);
+    }
+    if (!collisionSeen && sim.crash) {
+      collisionSeen = true;
+      const other = [...sim.traffic, ...sim.pedestrians].find((o) => o.id === sim.crash.object_id);
+      const partner = other ? { id: other.id, type: other.type, x_m: recordRound(other.x), z_m: recordRound(other.z),
+        heading_rad: recordRound(other.heading ?? 0), speed_mps: recordRound(other.speed ?? 0), width_m: recordRound(other.width),
+        depth_m: recordRound(other.depth), crossing: other.crossing ?? null, walking: other.walking ?? null,
+        hazard: other.hazard ? { ...other.hazard } : null } : null;
+      addEvent('collision', { ...sim.crash, collision_partner: partner }, sim.crash.time_s ?? sim.time);
+    }
+  };
+  return { rememberDecision, collect, events };
+}
 function summary(info, extra) {
   const truth = ex.observe().meta.evaluation_truth, v = sim.player;
+  const collisionObject = sim.crash ? [...sim.traffic, ...sim.pedestrians].find((o) => o.id === sim.crash.object_id) : null;
   const crash_context = sim.crash ? { maneuver_id: ex.maneuver?.maneuver_id ?? null,
     action_type: ex.maneuver?.action_type ?? null, maneuver_status: ex.maneuver?.status ?? null,
     ego_at_collision: { x_m: recordRound(v.x), z_m: recordRound(v.z), heading_rad: recordRound(v.heading),
       heading_deg: recordRound(v.heading * 180 / Math.PI, 1), speed_mps: recordRound(sim.crash.player_speed_mps), route_s_m: recordRound(v.s) },
-    ego_after_collision: { speed_mps: recordRound(v.speed), steering: recordRound(v.steering), target_speed_mps: recordRound(v.target) } } : null;
+    ego_after_collision: { speed_mps: recordRound(v.speed), steering: recordRound(v.steering), target_speed_mps: recordRound(v.target) },
+    collision_partner: collisionObject ? { id: collisionObject.id, type: collisionObject.type, x_m: recordRound(collisionObject.x), z_m: recordRound(collisionObject.z),
+      heading_rad: recordRound(collisionObject.heading ?? 0), speed_mps: recordRound(collisionObject.speed ?? 0), width_m: recordRound(collisionObject.width),
+      depth_m: recordRound(collisionObject.depth), crossing: collisionObject.crossing ?? null, walking: collisionObject.walking ?? null,
+      hazard: collisionObject.hazard ? { ...collisionObject.hazard } : null } : null,
+    diagnostic_state: ex.diagnosticSnapshot() } : null;
   return { ...info, config, sim_time_s: sim.time, arrived: sim.complete, crash: sim.crash, crash_context, collisions: sim.collisions, violations: sim.violations,
     violation_events: ex.violationEvents, front_red_violations: ex.frontRedViolations, front_required_stop_violations: ex.frontRequiredStopViolations,
     route_completion: Math.min(1, sim.player.s / Math.max(1, sim.player.route.length)), aeb_events: ex.aebEvents, aeb_steps: ex.aebSteps,
@@ -117,7 +178,7 @@ function summary(info, extra) {
 
 export async function runEpisode(cfg) {
   const info = await reset(cfg);
-  const policy = cfg.policy ?? 'model', maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], actions = {}, rejections = {}, trace = [], behaviorIntervals = [];
+  const policy = cfg.policy ?? 'model', maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], actions = {}, rejections = {}, trace = [], behaviorIntervals = [], incidents = createIncidentLog();
   recordBehaviorInterval(behaviorIntervals, 'local_bootstrap', true, 'bootstrap');
   let decisions = 0, accepted = 0, stuck = 0, stuckClear = 0, speedSum = 0;
   const t0 = performance.now();
@@ -128,17 +189,20 @@ export async function runEpisode(cfg) {
       if (shot) { frames.push({ step: ex.stepId, ...shot }); if (frames.length > 4) frames.shift(); }
       const history = frames.find((f) => f.step === ex.stepId - 10);
       if (ex.stepId >= 10 && (history || policy !== 'model')) {
-        let result;
+        let result, teacherDetail = null, decisionState = ex.diagnosticSnapshot(), latencyMs = null;
         if (policy === 'teacher') {
           const t = observableTeacher(ex, obs);
+          teacherDetail = t;
           result = { candidate_id: t.preferred, probabilities: t.probabilities, observation_id: obs.observation_id, model_version: 'observable-teacher' };
         } else {
           const started = performance.now(), response = await post(cfg.model_url ?? '/predict', requestBody(cfg, obs, history, shot));
           result = await response.json();
           if (!response.ok) throw Error(`model ${response.status}: ${JSON.stringify(result).slice(0, 300)}`);
-          latencies.push(performance.now() - started);
+          latencyMs = performance.now() - started; latencies.push(latencyMs);
         }
         const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
+        incidents.rememberDecision({ obs, shot, history, result: { ...result, teacher_detail: teacherDetail }, acceptedResult: res,
+          source: policy, latencyMs, state: decisionState });
         recordBehaviorInterval(behaviorIntervals, result.candidate_id, res.accepted, policy);
         if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1;
         decisions++; actions[result.candidate_id] = (actions[result.candidate_id] ?? 0) + 1;
@@ -148,31 +212,35 @@ export async function runEpisode(cfg) {
     if (stuckStep()) { stuck += DT; if (ex.unnecessaryStop()) stuckClear += DT; }
     speedSum += Math.abs(sim.player.speed) * DT;
     if (ex.step(1)) break;
+    incidents.collect();
     if (ex.stepId % 200 === 0) await new Promise((r) => setTimeout(r, 0));
   }
   latencies.sort((a, b) => a - b);
+  incidents.collect();
   if (behaviorIntervals.length) behaviorIntervals[behaviorIntervals.length - 1].interval_end_s = recordRound(sim.time);
   return summary(info, { policy, mode: 'batch', wall_s: (performance.now() - t0) / 1000, mean_speed_mps: speedSum / Math.max(sim.time, 1e-6), stuck_s: stuck, stuck_clear_s: stuckClear,
-    decisions, accepted, rejections, action_counts: actions, behavior_intervals: behaviorIntervals, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null, trace: cfg.trace ? trace : undefined });
+    decisions, accepted, rejections, action_counts: actions, behavior_intervals: behaviorIntervals, diagnostic_events: incidents.events,
+    latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null, trace: cfg.trace ? trace : undefined });
 }
 
 /** Real time: physics follows the wall clock at 20 Hz; at most one request in flight; answers older than 0.5 s are dropped. */
 export async function runRealtime(cfg) {
   const info = await reset(cfg);
-  const maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], rejections = {}, behaviorIntervals = [];
+  const maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], rejections = {}, behaviorIntervals = [], incidents = createIncidentLog();
   recordBehaviorInterval(behaviorIntervals, 'local_bootstrap', true, 'bootstrap');
   let inflight = false, requests = 0, accepted = 0, stuck = 0, speedSum = 0;
   frames.push({ step: ex.stepId, ...capture() }); // history frame for the first request at 0.5 s
   ex.observe();
   const start = performance.now();
-  const dispatch = async (obs, history, shot) => {
+  const dispatch = async (obs, history, shot, decisionState) => {
     inflight = true; requests++;
     const t = performance.now();
     try {
       const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, obs, history, shot));
       const result = await response.json();
-      latencies.push(performance.now() - t);
+      const latencyMs = performance.now() - t; latencies.push(latencyMs);
       if (response.ok) { const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
+        incidents.rememberDecision({ obs, shot, history, result, acceptedResult: res, source: 'model', latencyMs, state: decisionState });
         recordBehaviorInterval(behaviorIntervals, result.candidate_id, res.accepted, 'model');
         if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1; }
     } finally { inflight = false; }
@@ -184,21 +252,23 @@ export async function runRealtime(cfg) {
       if (stuckStep()) stuck += DT;
       speedSum += Math.abs(sim.player.speed) * DT;
       ex.step(1); stepped = true;
+      incidents.collect();
       if (ex.stepId % 5 === 0) {
         const obs = ex.observe(), shot = capture();
         frames.push({ step: ex.stepId, ...shot }); if (frames.length > 4) frames.shift();
         const history = frames.find((f) => f.step === ex.stepId - 10);
-        if (history && !inflight) void dispatch(obs, history, shot);
+        if (history && !inflight) void dispatch(obs, history, shot, ex.diagnosticSnapshot());
       }
     }
     await new Promise((r) => setTimeout(r, stepped ? 0 : 4));
   }
   while (inflight) await new Promise((r) => setTimeout(r, 10));
+  incidents.collect();
   const wall = (performance.now() - start) / 1000;
   latencies.sort((a, b) => a - b);
   if (behaviorIntervals.length) behaviorIntervals[behaviorIntervals.length - 1].interval_end_s = recordRound(sim.time);
   return summary(info, { policy: 'model', mode: 'realtime', wall_s: wall, realtime_factor: sim.time / wall, mean_speed_mps: speedSum / Math.max(sim.time, 1e-6), stuck_s: stuck,
-    requests, accepted, applied_hz: accepted / Math.max(sim.time, 1e-6), rejections, behavior_intervals: behaviorIntervals, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null,
+    requests, accepted, applied_hz: accepted / Math.max(sim.time, 1e-6), rejections, behavior_intervals: behaviorIntervals, diagnostic_events: incidents.events, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null,
     latency_ms_p95: latencies[Math.floor(latencies.length * 0.95)] ?? null });
 }
 

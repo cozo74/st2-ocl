@@ -103,6 +103,42 @@ export class SemanticExecutor {
   // 返回自车前保险杠到该 crossing 停止线平面的有符号距离：正值在线前，负值表示已经越线；未找到 crossing 时返回 null。
   frontDistance(c = this.crossing()) { return c ? stopLineDistance(this.sim.player, this.line(c)) : null; }
 
+  /** Diagnostic-only snapshot: simulator truth, sensor-visible actors and the current rule/conflict estimate. */
+  diagnosticSnapshot() {
+    const sim = this.sim, v = sim.player, c = this.crossing(), node = c ? sim.world.byId[c.nodeId] : null;
+    const rule = c ? sim.rule(v) : null, sensorIds = new Set((sim.perception ?? []).map((o) => o.id));
+    // Reconstruct the effective perception without calling perceived(): InteractionExecutor.perceived()
+    // updates its seen-memory/cache, and diagnostics must not affect later observations or Teacher rollouts.
+    const reported = { vehicles: sim.traffic.filter((o) => sensorIds.has(o.id)), pedestrians: sim.pedestrians.filter((o) => sensorIds.has(o.id)) };
+    let perceived = reported;
+    if (this.vehicleOcclusion && this.visible) {
+      const eye = this.eye(), occluders = reported.vehicles.filter((o) => o.type === 'car' && dist(o, eye) < 70);
+      perceived = { vehicles: reported.vehicles.filter((o) => this.visible(o, occluders, eye)),
+        pedestrians: reported.pedestrians.filter((o) => this.visible(o, occluders, eye)) };
+    }
+    const perceivedIds = new Set([...perceived.vehicles, ...perceived.pedestrians].map((o) => o.id));
+    const actor = (o) => ({ id: o.id, type: o.type, x_m: r2(o.x), z_m: r2(o.z), heading_rad: r2(o.heading ?? 0),
+      speed_mps: r2(o.speed ?? 0), width_m: r2(o.width), depth_m: r2(o.depth), distance_to_ego_m: r2(dist(o, v)),
+      perceived: perceivedIds.has(o.id), sensor_reported: sensorIds.has(o.id), crossing: o.crossing ?? null, walking: o.walking ?? null,
+      hazard: o.hazard ? { ...o.hazard } : null });
+    const allActors = [...sim.traffic, ...sim.pedestrians];
+    return {
+      sim_time_s: r2(sim.time), step_id: this.stepId,
+      ego: { x_m: r2(v.x), z_m: r2(v.z), heading_rad: r2(v.heading), speed_mps: r2(v.speed),
+        steering: r2(v.steering), target_speed_mps: r2(v.target), route_s_m: r2(v.s), width_m: r2(v.width), depth_m: r2(v.depth) },
+      junction: c ? { node_id: c.nodeId, control: node?.control ?? null, stop_s_m: r2(c.stopS), approach_rad: r2(c.approach),
+        front_distance_m: r2(this.frontDistance(c)), signal: node?.control === 'signal' ? signalState(node, sim.time, c.approach) : null,
+        rule: rule ? { color: rule.color, must_stop: rule.mustStop, reason: rule.reason, stop_completed: rule.stopCompleted, distance_m: rule.distance } : null } : null,
+      maneuver: this.maneuver ? { maneuver_id: this.maneuver.maneuver_id, action_type: this.maneuver.action_type,
+        target_id: this.maneuver.target_id, status: this.maneuver.status, started_s: r2(this.maneuver.started), feedback: [...this.maneuver.feedback] } : null,
+      perception: { sensor_reported_ids: [...sensorIds], perceived_ids: [...perceivedIds] },
+      actors: allActors.filter((o) => sensorIds.has(o.id) || dist(o, v) < 80).map(actor),
+      lead: (() => { const lead = leadVehicle(v, perceived.vehicles); return lead ? { id: lead.other.id, gap_m: r2(lead.gap), speed_mps: r2(lead.other.speed) } : null; })(),
+      predicted_conflict: this.predictConflict(perceived),
+      aeb: { enabled: this.aeb, active: !!this.aebActive, conflict: this.aebConflict ?? null },
+    };
+  }
+
   /** Live objects whose ids the last JevPilot sensor scan reported (range, 360°, building occlusion). */
   perceived() {
     const ids = new Set((this.sim.perception ?? []).map((o) => o.id));
@@ -214,6 +250,7 @@ export class SemanticExecutor {
       if (sim.crash || sim.complete) break;
       const originalCrossing = this.crossing(), originalLine = originalCrossing ? this.line(originalCrossing) : null;
       const oldFront = originalLine ? stopLineDistance(v, originalLine) : null, beforeRule = originalCrossing ? sim.rule(v) : null, oldTime = sim.time;
+      const egoBefore = { x_m: r2(v.x), z_m: r2(v.z), heading_rad: r2(v.heading), speed_mps: r2(v.speed), route_s_m: r2(v.s) };
       v.maneuver = { lane_offset_m: 0, lookahead_m: clamp(3 + Math.abs(v.speed) * 0.45, 3, 10) };
       const env = this.env();
       const m = this.maneuver;
@@ -233,6 +270,7 @@ export class SemanticExecutor {
       if (violationDelta > 0) this.violationEvents.push({
         step_id: this.stepId, sim_time_s: sim.time, count: violationDelta, event: sim.events?.[0]?.text ?? null,
         maneuver_id: m?.maneuver_id ?? null, action_type: m?.action_type ?? null, maneuver_status: m?.status ?? null,
+        ego_before: egoBefore, diagnostic_state: this.diagnosticSnapshot(),
         ego: { x_m: r2(v.x), z_m: r2(v.z), heading_rad: r2(v.heading), heading_deg: r1(v.heading * 180 / Math.PI),
           speed_mps: r2(sim.crash?.player_speed_mps ?? v.speed), route_s_m: r2(v.s) },
       });
@@ -245,6 +283,9 @@ export class SemanticExecutor {
           const required = node.control === 'signal' ? color === 'red' || (color === 'amber' && beforeRule.mustStop) : node.control === 'stop' ? !beforeRule.stopCompleted : false;
           this.frontBumperEvents.push({ step_id: this.stepId, sim_time: t, node_id: originalCrossing.nodeId, control: node.control, color, required_stop: required,
             speed_mps: v.speed, maneuver_id: m?.maneuver_id ?? null, action_type: m?.action_type ?? null, maneuver_status: m?.status ?? null,
+            stop_line: { old_front_distance_m: r2(oldFront), new_front_distance_m: r2(newFront), crossing_fraction: r2(fraction) },
+            rule_before: beforeRule ? { color: beforeRule.color, must_stop: beforeRule.mustStop, reason: beforeRule.reason, stop_completed: beforeRule.stopCompleted } : null,
+            ego_before: egoBefore, diagnostic_state: this.diagnosticSnapshot(),
             ego: { x_m: r2(v.x), z_m: r2(v.z), heading_rad: r2(v.heading), heading_deg: r1(v.heading * 180 / Math.PI),
               route_s_m: r2(v.s) } });
           this.frontLineLocks.set(id, true);
