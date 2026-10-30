@@ -34,12 +34,17 @@ const r1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
 const r2 = (x) => (Number.isFinite(x) ? Math.round(x * 100) / 100 : null);
 
 export function geometricLimit(sim, v) {
+  //  sim.world.theme.limit 是当前道路的限速，routeSpeedLimit(v) 是自车路线的限速；max 是自车当前速度、路线限速和路线终点距离的几何约束。
   let max = Math.min(sim.world.theme.limit, routeSpeedLimit(v));
+  // dest 是自车前保险杠到路线终点的距离，减去 1.5 m 的安全缓冲；若路线终点在自车前方，则 dest 为正，否则为 0。
   const dest = Math.max(0, v.route.length - v.s - 1.5);
+  // max 是自车当前速度、路线限速和路线终点距离的几何约束：若路线终点在自车前方，则 max 不超过 sqrt(2 * 4.5 * dest)。
   max = Math.min(max, Math.sqrt(2 * 4.5 * dest));
   for (let d = 2; d <= 42; d += 2) {
+    // a 是自车路线前方 d 米处的点，b 是 d + 2 米处的点；curvature 是 a 到 b 的航向与 a 的航向的夹角的一半。
     const a = pointAt(v.route.points, v.s + d), b = pointAt(v.route.points, v.s + d + 2);
     const curvature = Math.abs(angle(heading(a, b) - (a.heading ?? v.heading))) / 2;
+    // safe 是自车路线前方 d 米处的曲率约束：若曲率为 0，则 safe 为 max；若曲率为 0.001，则 safe 为 min(max, sqrt(2.4 / 0.001))。
     const safe = Math.min(max, Math.sqrt(2.4 / Math.max(0.001, curvature)));
     max = Math.min(max, Math.sqrt(safe * safe + 2 * 4.5 * Math.max(0, d - 2)));
   }
@@ -84,15 +89,18 @@ export class SemanticExecutor {
   constructor(sim, { aeb = false } = {}) {
     this.sim = sim; this.aeb = aeb; this.sequence = 0; this.stepId = 0; this.acceleration = 0; this.jerk = 0;
     this.maneuver = null; this.lastActions = []; this.frames = new Map(); this.policySource = 'local_executor';
-    this.aebEvents = 0; this.aebSteps = 0; this.frontBumperEvents = []; this.frontLineLocks = new Map();
+    this.aebEvents = 0; this.aebSteps = 0; this.frontBumperEvents = []; this.violationEvents = []; this.frontLineLocks = new Map();
     this.frontRedViolations = 0; this.frontRequiredStopViolations = 0; this.stationarySince = sim.time; this.episodeId = 'episode';
     this.comfort = { steps: 0, accelAbs: 0, accelSq: 0, accelMax: 0, jerkAbs: 0, jerkSq: 0, jerkMax: 0, jerkSteps: 0, hardBrakeSteps: 0 };
     this.cachedEnv = null; this.cachedEnvStep = -1;
     sim.autopilot = true; sim.safety = false; sim.backgroundPlanning = true;
-    sim.rerouteIfNeeded = () => {};
+    sim.rerouteIfNeeded = () => { };
   }
+  // 依据自车路线的 crossings 列表取得下一个路口；Simulation.crossingFor 会选第一个 stopS - player.s > -19 的 crossing。
+  // 因此路口驶过后 19 m 内仍可能返回它；没有符合条件的路口时返回 null。
   crossing() { return this.sim.crossingFor(this.sim.player); }
   line(c = this.crossing()) { return c ? { ...pointAt(this.sim.player.route.points, c.stopS), heading: c.approach, node_id: c.nodeId, stop_s: c.stopS } : null; }
+  // 返回自车前保险杠到该 crossing 停止线平面的有符号距离：正值在线前，负值表示已经越线；未找到 crossing 时返回 null。
   frontDistance(c = this.crossing()) { return c ? stopLineDistance(this.sim.player, this.line(c)) : null; }
 
   /** Live objects whose ids the last JevPilot sensor scan reported (range, 360°, building occlusion). */
@@ -140,16 +148,29 @@ export class SemanticExecutor {
     return { vehicles_inside: inside, cross_approaching: approaching, pedestrians_crossing: peds, earlier_arrivals: node.control === 'stop' ? earlier : 0 };
   }
   candidates(env = this.env()) {
+    // 根据自车运动状态、下一个路口和当前冲突，构造此刻可执行的语义动作集合。
+    // c 是路线 crossings 中当前选中的路口（驶过后 19 m 内仍可能保留）；nav 是路线导航摘要，含 next_turn 和 turn_distance_m 等字段。
+    // |speed| 达到 0.5 m/s 就视为正在移动；低于该阈值按静止处理。
     const v = this.sim.player, c = this.crossing(), nav = this.sim.navigation(), moving = Math.abs(v.speed) >= 0.5;
+    // 有 crossing 时计算车头到停止线的有符号距离（米），没有 crossing 时设为 null；下方用它决定是否提供 stop_at_line。
     const front = c ? this.frontDistance(c) : null, rows = [];
+    // 自车在移动时，可选择沿导航路线继续巡航。
     if (moving) rows.push(['keep_route_cruise', null]);
+    // 静止且车头距停止线不超过 1.0 m 时，视为已在停止线附近，不重复提供驶向停止线的动作。
     const restingAtLine = !moving && front !== null && front <= 1.0;
+    // front 是车头到停止线的距离（米）：允许最多 0.3 m 的越线误差，且只在停止线前方 85 m 内提供停车动作。
     if (c && front > -0.3 && front < 85 && !restingAtLine) rows.push(['stop_at_line', c.nodeId]);
+    // 自车静止时，可继续保持停车，也可沿路线起步。
     if (!moving) { rows.push(['hold_stop', null]); rows.push(['proceed_route', null]); }
+    // 仅当导航给出的转向距离小于 50 m，且下一转向是左转或右转时，提供通过当前路口转向的动作。
     if (c && ['left', 'right'].includes(nav.next_turn) && nav.turn_distance_m < 50) rows.push(['route_turn', c.nodeId]);
+    // 自车移动且当前或最近一次预测到冲突时，提供减速让行动作。
     if (moving && (env.hazard ?? this.lastHazard)) rows.push(['yield_agent', null]);
+    // 停车、转弯或让行动作仍在执行时，允许模型选择继续当前动作。
     if (this.maneuver && ['stop_at_line', 'route_turn', 'yield_agent'].includes(this.maneuver.action_type) && this.maneuver.status === 'active') rows.push(['continue_current', this.maneuver.target_id]);
+    // 始终保留紧急制动作为候选回退动作。
     rows.push(['emergency_brake', null]);
+    // 将动作类型和目标路口整理为候选对象，并附上速度模式和供模型阅读的说明。
     return rows.map(([action_type, target_id]) => ({ candidate_id: action_type, action_type, target_id, speed_profile: ACTIONS[action_type][0], description: ACTIONS[action_type][1] }));
   }
   observationId() { return `${this.episodeId}:${this.stepId}`; }
@@ -180,14 +201,16 @@ export class SemanticExecutor {
     if (prior && MOTION.includes(type) && STOPPING.includes(prior.action_type) && prior.status === 'active' && sim.time - prior.started < 0.5 - 1e-8)
       return { accepted: false, reason: 'nonurgent_hysteresis', maneuver_id: prior.maneuver_id };
     const line = type === 'stop_at_line' ? this.line() : null;
-    this.maneuver = { maneuver_id: `m${++this.sequence}`, action_type: type, target_id: target, started: sim.time, start_s: sim.player.s, status: 'active', line, feedback: [],
-      exit_s: type === 'route_turn' ? (this.crossing()?.stopS ?? sim.player.s) + 28 : null };
+    this.maneuver = {
+      maneuver_id: `m${++this.sequence}`, action_type: type, target_id: target, started: sim.time, start_s: sim.player.s, status: 'active', line, feedback: [],
+      exit_s: type === 'route_turn' ? (this.crossing()?.stopS ?? sim.player.s) + 28 : null
+    };
     this.lastActions.push({ action_type: type, at: sim.time }); this.lastActions = this.lastActions.slice(-3);
     return { accepted: true, continued: false, maneuver_id: this.maneuver.maneuver_id };
   }
   step(count = 1) {
     for (let i = 0; i < count; i++) {
-      const sim = this.sim, v = sim.player, oldSpeed = v.speed, previousAcceleration = this.acceleration;
+      const sim = this.sim, v = sim.player, oldSpeed = v.speed, previousAcceleration = this.acceleration, violationsBefore = sim.violations;
       if (sim.crash || sim.complete) break;
       const originalCrossing = this.crossing(), originalLine = originalCrossing ? this.line(originalCrossing) : null;
       const oldFront = originalLine ? stopLineDistance(v, originalLine) : null, beforeRule = originalCrossing ? sim.rule(v) : null, oldTime = sim.time;
@@ -205,6 +228,14 @@ export class SemanticExecutor {
         target = aebConflict.max_speed_mps; this.aebSteps++; if (!this.aebActive) this.aebEvents++; this.aebActive = true;
       } else this.aebActive = false;
       v.target = target; sim.autopilot = true; sim.safety = false; sim.step(DT); this.stepId++;
+      // 捕获本步新增的仿真交通违规，并关联当时执行的语义动作与自车状态。
+      const violationDelta = sim.violations - violationsBefore;
+      if (violationDelta > 0) this.violationEvents.push({
+        step_id: this.stepId, sim_time_s: sim.time, count: violationDelta, event: sim.events?.[0]?.text ?? null,
+        maneuver_id: m?.maneuver_id ?? null, action_type: m?.action_type ?? null, maneuver_status: m?.status ?? null,
+        ego: { x_m: r2(v.x), z_m: r2(v.z), heading_rad: r2(v.heading), heading_deg: r1(v.heading * 180 / Math.PI),
+          speed_mps: r2(sim.crash?.player_speed_mps ?? v.speed), route_s_m: r2(v.s) },
+      });
       if (Math.abs(v.speed) >= 0.2) this.stationarySince = sim.time;
       if (originalLine) {
         const newFront = stopLineDistance(v, originalLine), id = `${sim.routeVersion}:${originalCrossing.nodeId}:${originalCrossing.stopS}`;
@@ -212,7 +243,10 @@ export class SemanticExecutor {
           const fraction = clamp(oldFront / (oldFront - newFront), 0, 1), t = oldTime + fraction * DT, node = sim.world.byId[originalCrossing.nodeId];
           const color = node.control === 'signal' ? signalState(node, t, originalCrossing.approach).color : node.control;
           const required = node.control === 'signal' ? color === 'red' || (color === 'amber' && beforeRule.mustStop) : node.control === 'stop' ? !beforeRule.stopCompleted : false;
-          this.frontBumperEvents.push({ step_id: this.stepId, sim_time: t, node_id: originalCrossing.nodeId, control: node.control, color, required_stop: required, speed_mps: v.speed });
+          this.frontBumperEvents.push({ step_id: this.stepId, sim_time: t, node_id: originalCrossing.nodeId, control: node.control, color, required_stop: required,
+            speed_mps: v.speed, maneuver_id: m?.maneuver_id ?? null, action_type: m?.action_type ?? null, maneuver_status: m?.status ?? null,
+            ego: { x_m: r2(v.x), z_m: r2(v.z), heading_rad: r2(v.heading), heading_deg: r1(v.heading * 180 / Math.PI),
+              route_s_m: r2(v.s) } });
           this.frontLineLocks.set(id, true);
           if (color === 'red') this.frontRedViolations++;
           if (required) this.frontRequiredStopViolations++;
@@ -245,8 +279,10 @@ export class SemanticExecutor {
     const side = hazard ? (hazard.right_m > 1.5 ? 'right' : hazard.right_m < -1.5 ? 'left' : 'ahead') : null;
     const student_obs = {
       ego: { speed_mps: r2(v.speed), acceleration_mps2: r2(this.acceleration), steering: r2(v.steering), route_offset_m: r2(near.distance), heading_error_deg: r1(nav.heading_error_deg), stationary_s: r1(this.stationaryS()) },
-      nav: { remaining_m: r1(Math.max(0, v.route.length - v.s)), next_turn: nav.next_turn, turn_distance_m: r1(nav.turn_distance_m), speed_limit_mps: r1(Math.min(sim.world.theme.limit, routeSpeedLimit(v))),
-        junction_control: node && node.control !== 'none' ? node.control : null, stop_line_ahead_m: c ? r1(this.frontDistance(c)) : null, stop_completed: c ? !!rule.stopCompleted : false },
+      nav: {
+        remaining_m: r1(Math.max(0, v.route.length - v.s)), next_turn: nav.next_turn, turn_distance_m: r1(nav.turn_distance_m), speed_limit_mps: r1(Math.min(sim.world.theme.limit, routeSpeedLimit(v))),
+        junction_control: node && node.control !== 'none' ? node.control : null, stop_line_ahead_m: c ? r1(this.frontDistance(c)) : null, stop_completed: c ? !!rule.stopCompleted : false
+      },
       maneuver: { action_type: m?.action_type ?? 'none', target_id: m?.target_id ?? null, elapsed_s: r1(m ? sim.time - m.started : 0), progress_m: r1(m ? Math.max(0, v.s - m.start_s) : 0), status: m?.status ?? 'idle', feedback: m ? [...m.feedback] : [] },
       recent_actions: this.lastActions.map((a) => ({ action_type: a.action_type, age_s: r1(sim.time - a.at) })),
       traffic: {
@@ -261,11 +297,13 @@ export class SemanticExecutor {
       meta: {
         episode_id: this.episodeId, step_id: this.stepId, sim_time: sim.time, controller_version: VERSION, dt: DT, policy_source: this.policySource,
         teacher_state: { signal: c ? rule.color : null, required_stop: c ? rule.mustStop : false, reason: c ? rule.reason : null, control: node?.control ?? null },
-        evaluation_truth: { collisions: sim.collisions, crash: sim.crash, violations: sim.violations, front_bumper_red_violations: this.frontRedViolations,
+        evaluation_truth: {
+          collisions: sim.collisions, crash: sim.crash, violations: sim.violations, front_bumper_red_violations: this.frontRedViolations,
           front_bumper_required_stop_violations: this.frontRequiredStopViolations, front_bumper_crossing_events: this.frontBumperEvents, arrived: sim.complete,
           progress_m: sim.distance, route_length_m: v.route.length, route_s: v.s, aeb_events: this.aebEvents, aeb_steps: this.aebSteps, physics_steps: cf.steps,
           acceleration_rms_mps2: Math.sqrt(cf.accelSq / Math.max(1, cf.steps)), acceleration_abs_max_mps2: cf.accelMax, jerk_rms_mps3: Math.sqrt(cf.jerkSq / Math.max(1, cf.jerkSteps)), hard_brake_steps: cf.hardBrakeSteps,
-          hazards: sim.director?.log ?? [] },
+          hazards: sim.director?.log ?? []
+        },
       },
     };
   }
@@ -312,8 +350,10 @@ function rollout(ex, candidate) {
   }
   // The ego is at fault if it was still moving into the contact.
   const atFault = collision ? collision.player_speed_mps > 0.4 : false;
-  return { collision: atFault, collision_any: !!collision, collision_at_s: collision?.at_s ?? null, collision_type: collision?.type ?? null,
-    violation: sim.violations > startViol, progress_m: v.s - startS, final_speed_mps: v.speed, max_decel_mps2: maxDecel, min_clearance_m: minGap, start_speed_mps: startSpeed };
+  return {
+    collision: atFault, collision_any: !!collision, collision_at_s: collision?.at_s ?? null, collision_type: collision?.type ?? null,
+    violation: sim.violations > startViol, progress_m: v.s - startS, final_speed_mps: v.speed, max_decel_mps2: maxDecel, min_clearance_m: minGap, start_speed_mps: startSpeed
+  };
 }
 
 export function referenceTeacher(ex, obs = ex.observe()) {

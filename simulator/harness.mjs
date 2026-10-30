@@ -87,17 +87,38 @@ function crashHazard() {
   return o?.hazard ? (o.hazard.kind ?? 'hazard') : null;
 }
 
+const recordRound = (x, digits = 2) => Number.isFinite(x) ? Math.round(x * 10 ** digits) / 10 ** digits : null;
+function egoSnapshot(speedOverride = null) {
+  const v = sim.player;
+  return { x_m: recordRound(v.x), z_m: recordRound(v.z), heading_rad: recordRound(v.heading),
+    heading_deg: recordRound(v.heading * 180 / Math.PI, 1), speed_mps: recordRound(speedOverride ?? v.speed),
+    steering: recordRound(v.steering), target_speed_mps: recordRound(v.target), route_s_m: recordRound(v.s) };
+}
+function recordBehaviorInterval(rows, selectedCandidate, accepted, source) {
+  const now = recordRound(sim.time);
+  if (rows.length) rows[rows.length - 1].interval_end_s = now;
+  rows.push({ interval_start_s: now, interval_end_s: null, step_id: ex.stepId, source,
+    selected_candidate_id: selectedCandidate, accepted,
+    maneuver_id: ex.maneuver?.maneuver_id ?? null, action_type: ex.maneuver?.action_type ?? null,
+    maneuver_status: ex.maneuver?.status ?? null, target_id: ex.maneuver?.target_id ?? null, ego: egoSnapshot() });
+}
 function summary(info, extra) {
-  const truth = ex.observe().meta.evaluation_truth;
-  return { ...info, config, sim_time_s: sim.time, arrived: sim.complete, crash: sim.crash, collisions: sim.collisions, violations: sim.violations,
-    front_red_violations: ex.frontRedViolations, front_required_stop_violations: ex.frontRequiredStopViolations,
+  const truth = ex.observe().meta.evaluation_truth, v = sim.player;
+  const crash_context = sim.crash ? { maneuver_id: ex.maneuver?.maneuver_id ?? null,
+    action_type: ex.maneuver?.action_type ?? null, maneuver_status: ex.maneuver?.status ?? null,
+    ego_at_collision: { x_m: recordRound(v.x), z_m: recordRound(v.z), heading_rad: recordRound(v.heading),
+      heading_deg: recordRound(v.heading * 180 / Math.PI, 1), speed_mps: recordRound(sim.crash.player_speed_mps), route_s_m: recordRound(v.s) },
+    ego_after_collision: { speed_mps: recordRound(v.speed), steering: recordRound(v.steering), target_speed_mps: recordRound(v.target) } } : null;
+  return { ...info, config, sim_time_s: sim.time, arrived: sim.complete, crash: sim.crash, crash_context, collisions: sim.collisions, violations: sim.violations,
+    violation_events: ex.violationEvents, front_red_violations: ex.frontRedViolations, front_required_stop_violations: ex.frontRequiredStopViolations,
     route_completion: Math.min(1, sim.player.s / Math.max(1, sim.player.route.length)), aeb_events: ex.aebEvents, aeb_steps: ex.aebSteps,
     hard_brake_steps: truth.hard_brake_steps, jerk_rms_mps3: truth.jerk_rms_mps3, hazards: sim.director?.log ?? [], crash_hazard: crashHazard(), front_events: ex.frontBumperEvents, ...extra };
 }
 
 export async function runEpisode(cfg) {
   const info = await reset(cfg);
-  const policy = cfg.policy ?? 'model', maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], actions = {}, rejections = {}, trace = [];
+  const policy = cfg.policy ?? 'model', maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], actions = {}, rejections = {}, trace = [], behaviorIntervals = [];
+  recordBehaviorInterval(behaviorIntervals, 'local_bootstrap', true, 'bootstrap');
   let decisions = 0, accepted = 0, stuck = 0, stuckClear = 0, speedSum = 0;
   const t0 = performance.now();
   while (sim.time < maxTime && !sim.crash && !sim.complete) {
@@ -118,6 +139,7 @@ export async function runEpisode(cfg) {
           latencies.push(performance.now() - started);
         }
         const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
+        recordBehaviorInterval(behaviorIntervals, result.candidate_id, res.accepted, policy);
         if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1;
         decisions++; actions[result.candidate_id] = (actions[result.candidate_id] ?? 0) + 1;
         if (cfg.trace) trace.push({ t: Math.round(sim.time * 100) / 100, v: Math.round(sim.player.speed * 100) / 100, chosen: result.candidate_id, executing: ex.maneuver?.action_type, p: result.probabilities });
@@ -129,14 +151,16 @@ export async function runEpisode(cfg) {
     if (ex.stepId % 200 === 0) await new Promise((r) => setTimeout(r, 0));
   }
   latencies.sort((a, b) => a - b);
+  if (behaviorIntervals.length) behaviorIntervals[behaviorIntervals.length - 1].interval_end_s = recordRound(sim.time);
   return summary(info, { policy, mode: 'batch', wall_s: (performance.now() - t0) / 1000, mean_speed_mps: speedSum / Math.max(sim.time, 1e-6), stuck_s: stuck, stuck_clear_s: stuckClear,
-    decisions, accepted, rejections, action_counts: actions, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null, trace: cfg.trace ? trace : undefined });
+    decisions, accepted, rejections, action_counts: actions, behavior_intervals: behaviorIntervals, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null, trace: cfg.trace ? trace : undefined });
 }
 
 /** Real time: physics follows the wall clock at 20 Hz; at most one request in flight; answers older than 0.5 s are dropped. */
 export async function runRealtime(cfg) {
   const info = await reset(cfg);
-  const maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], rejections = {};
+  const maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], rejections = {}, behaviorIntervals = [];
+  recordBehaviorInterval(behaviorIntervals, 'local_bootstrap', true, 'bootstrap');
   let inflight = false, requests = 0, accepted = 0, stuck = 0, speedSum = 0;
   frames.push({ step: ex.stepId, ...capture() }); // history frame for the first request at 0.5 s
   ex.observe();
@@ -148,7 +172,9 @@ export async function runRealtime(cfg) {
       const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, obs, history, shot));
       const result = await response.json();
       latencies.push(performance.now() - t);
-      if (response.ok) { const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 }); if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1; }
+      if (response.ok) { const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
+        recordBehaviorInterval(behaviorIntervals, result.candidate_id, res.accepted, 'model');
+        if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1; }
     } finally { inflight = false; }
   };
   while (sim.time < maxTime && !sim.crash && !sim.complete) {
@@ -170,8 +196,9 @@ export async function runRealtime(cfg) {
   while (inflight) await new Promise((r) => setTimeout(r, 10));
   const wall = (performance.now() - start) / 1000;
   latencies.sort((a, b) => a - b);
+  if (behaviorIntervals.length) behaviorIntervals[behaviorIntervals.length - 1].interval_end_s = recordRound(sim.time);
   return summary(info, { policy: 'model', mode: 'realtime', wall_s: wall, realtime_factor: sim.time / wall, mean_speed_mps: speedSum / Math.max(sim.time, 1e-6), stuck_s: stuck,
-    requests, accepted, applied_hz: accepted / Math.max(sim.time, 1e-6), rejections, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null,
+    requests, accepted, applied_hz: accepted / Math.max(sim.time, 1e-6), rejections, behavior_intervals: behaviorIntervals, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null,
     latency_ms_p95: latencies[Math.floor(latencies.length * 0.95)] ?? null });
 }
 
