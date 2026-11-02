@@ -43,8 +43,8 @@ export function segmentHitsBox(a, b, box, pad = -0.1) {
 }
 
 export class InteractionExecutor extends SemanticExecutor {
-  constructor(sim, { aeb = false, obsSchema = '1.1' } = {}) {
-    super(sim, { aeb });
+  constructor(sim, { aeb = false, safePass = true, obsSchema = '1.1' } = {}) {
+    super(sim, { aeb, safePass });
     this.obsSchema = obsSchema;
     this.vehicleOcclusion = obsSchema !== '1.0';
     this.seen = new Map();
@@ -108,7 +108,8 @@ export class InteractionExecutor extends SemanticExecutor {
 // ------------------------------------------------------------------------------------
 // Observable privileged teacher (see header).
 // ------------------------------------------------------------------------------------
-const HORIZON_STEPS = 90; // 4.5 s
+const HORIZON_STEPS = 60; // 3 s, used by the Teacher rollout
+const VLM_CANDIDATE_HORIZON_STEPS = 90; // 4.5 s, used by the VLM safety gate
 const SEEN_WINDOW_S = 1.0, NEAR_M = 8;
 
 function observableClone(ex) {
@@ -129,10 +130,10 @@ function rearEnded(v, other) {
   return rel.ahead_m < 0 && Math.abs(rel.heading_relative_deg) < 50;
 }
 
-/** The zone a moving vehicle will cover in the next 0.6 s (its footprint stretched forward). */
-function frontZone(o) {
-  const b = clamp((o.speed || 0) * 0.6, 0, 8);
-  if (b < 0.3) return null;
+/** Forward-stretched footprint over horizonS seconds (0.6 s by default). */
+function frontZone(o, horizonS = 0.6, minExtensionM = 0.3) {
+  const b = clamp((o.speed || 0) * horizonS, 0, 8);
+  if (b < minExtensionM) return null;
   const s = Math.sin(o.heading || 0), c = Math.cos(o.heading || 0);
   return { ...o, x: o.x + (s * b) / 2, z: o.z - (c * b) / 2, depth: (o.depth || 4.2) + b };
 }
@@ -149,7 +150,7 @@ function rollout(ex, candidate) {
   let collision = null, maxDecel = 0, minGap = Infinity, prev = v.speed, stoppedAt = null, intrusion = null;
   // filter是保留满足条件的对象，返回一个新数组；这里保留非hazard或hazard不为parked的交通对象和行人。
   const dyn = () => [...sim.traffic.filter((o) => !o.hazard || o.hazard.state !== 'parked'), ...sim.pedestrians.filter((o) => !o.hazard || o.hazard.state !== 'parked')];
-  // 按 DT=0.05 秒逐步执行候选动作；HORIZON_STEPS=90，因此最长预测 4.5 秒。
+  // 按 DT=0.05 秒逐步执行候选动作；HORIZON_STEPS=60，因此最长预测 3 秒。
   for (let k = 0; k < HORIZON_STEPS; k++) {
     // 更新自车的车道保持预瞄参数，并计算当前前车，用于跟车限速。
     v.maneuver = { lane_offset_m: 0, lookahead_m: clamp(3 + Math.abs(v.speed) * 0.45, 3, 10) };
@@ -210,6 +211,149 @@ function rollout(ex, candidate) {
     // intrusion 表示是否检测到车辆前方区域侵入自车车身；intrusion_at_s 是首次发生时间（秒）。
     intrusion: !!intrusion, intrusion_at_s: intrusion?.at_s ?? null
   };
+}
+
+/**
+ * VLM 候选专用 rollout：先在克隆仿真中执行候选并收集状态序列，再统一检查碰撞约束。
+ * 完整预测时域为 VLM_CANDIDATE_HORIZON_STEPS 个 DT 间隔（4.5 秒）；包含 t=0 初始帧时最多保存 91 帧。
+ */
+const STOCL_SAFE_SPECIFICATION = `Model DriveJevSafeCheckPaper:
+context Ego
+  inv NearbyRisk: self.perceived->exists(t | t.position.distance(self.position) < (t.speed + self.targetSpeed) * 3 + 12)
+  inv WithoutCollisionFront: self.perceived->forAll(t | self.frontZone.intersects(t.frontZone) = false)
+formula Safe: globally[0,90] (not NearbyRisk or WithoutCollisionFront)
+`;
+
+function finiteNumber(value, fallback = 0) { return Number.isFinite(value) ? value : fallback; }
+function geometryNumber(value) { return Number(finiteNumber(value).toFixed(6)); }
+function pointWkt(position) { return `POINT (${geometryNumber(position.x)} ${geometryNumber(position.z)})`; }
+function rectangleWkt(box) {
+  const heading = finiteNumber(box.heading), sin = Math.sin(heading), cos = Math.cos(heading);
+  const halfWidth = finiteNumber(box.width, 1.9) / 2, halfDepth = finiteNumber(box.depth, 4.2) / 2;
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([rightSign, forwardSign]) => {
+    const right = rightSign * halfWidth, forward = forwardSign * halfDepth;
+    return [box.x + cos * right + sin * forward, box.z + sin * right - cos * forward];
+  });
+  return `POLYGON ((${corners.map(([x, z]) => `${geometryNumber(x)} ${geometryNumber(z)}`).join(', ')}))`;
+}
+function frontZoneWkt(object) {
+  const box = object.footprint, extension = Math.max(0, Math.min(8, finiteNumber(object.speed) * DT));
+  const sin = Math.sin(finiteNumber(object.heading)), cos = Math.cos(finiteNumber(object.heading));
+  return rectangleWkt({ x: box.x + sin * extension / 2, z: box.z - cos * extension / 2,
+    width: box.width, depth: box.depth + extension, heading: object.heading });
+}
+
+function toStoclSnapshots(states) {
+  const idsBySourceId = new Map();
+  return states.map(({ ego, perceived }) => {
+    const trafficObjects = perceived.map((object) => {
+      if (!idsBySourceId.has(object.id)) idsBySourceId.set(object.id, idsBySourceId.size + 1);
+      const id = idsBySourceId.get(object.id);
+      const box = object.footprint;
+      return { id, actorType: String(object.actorType ?? 'unknown'), position: pointWkt(object.position),
+        speed: finiteNumber(object.speed), heading: finiteNumber(object.heading), footprint: rectangleWkt(box),
+        frontZone: frontZoneWkt(object) };
+    });
+    const egoBox = ego.footprint;
+    return { modelName: 'DriveJevSafeCheckPaper', objectsByClass: {
+      Ego: [{ id: 1, position: pointWkt(ego.position), speed: finiteNumber(ego.speed), heading: finiteNumber(ego.heading),
+        footprint: rectangleWkt(egoBox), frontZone: frontZoneWkt(ego), targetSpeed: finiteNumber(ego.targetSpeed, ego.speed),
+        stopLineDist: Number.isFinite(ego.stopLineDist) ? ego.stopLineDist : null }],
+      TrafficObject: trafficObjects,
+    }, linksByAssociation: { Perception: trafficObjects.map((object) => ({ sid: 1, eid: object.id })) } };
+  });
+}
+
+async function evaluateSafeFormula(states) {
+  const endpoint = typeof window !== 'undefined' ? '/api/stocl/evaluate/scenario'
+    : (globalThis.process?.env?.STOCL_SCENARIO_URL || 'http://127.0.0.1:8765/api/v1/evaluate/scenario');
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ specification: STOCL_SAFE_SPECIFICATION, states: toStoclSnapshots(states), currentPosition: 1, strategy: 'DYNAMIC' }),
+    signal: AbortSignal.timeout(15000) });
+  if (!response.ok) throw new Error(`STOCL scenario evaluation failed: HTTP ${response.status} ${await response.text()}`);
+  const result = await response.json();
+  const safe = result.formulaResults?.find((formula) => formula.formulaName === 'Safe');
+  if (typeof safe?.satisfied !== 'boolean') throw new Error('STOCL response is missing the Safe formula result');
+  return { safe_formula: safe.satisfied, evaluation_ms: result.durationMs };
+}
+
+async function rolloutVlmCandidate(ex, candidate, includeStates = false) {
+  // 在隔离的仿真副本中预测，避免评估候选时改动真实仿真状态。
+  // 对象集合沿用 Teacher 的可观测范围：近期见过、距离 8 米内，或已停放的危险对象。
+  const sim = observableClone(ex), v = sim.player;
+  // rollout 专用：记录碰撞，但不让碰撞终止克隆仿真，以收集完整预测时域。
+  sim.rolloutContinueAfterCollision = true;
+  sim.paused = false;
+  // 将副本中的车辆和行人作为 Ego 的 perceived 对象，后续每帧按此集合生成状态。
+  sim.perception = [...sim.traffic, ...sim.pedestrians];
+  const rolloutEx = new InteractionExecutor(sim, { safePass: ex.safePass, obsSchema: ex.obsSchema });
+  // 对象集合已由 observableClone 确定；关闭再次按视线遮挡缩小集合的逻辑。
+  rolloutEx.vehicleOcclusion = false;
+  // 把候选动作转换成仿真器可执行的 maneuver。
+  // continue_current 沿用当前 maneuver；stop_at_line 则附上当前停止线。
+  const m = candidate.action_type === 'continue_current' && ex.maneuver ? { ...ex.maneuver, feedback: [] }
+    : { action_type: candidate.action_type, line: candidate.action_type === 'stop_at_line' ? ex.line() : null, exit_s: null };
+  // 将仿真对象的位置和车身尺寸表示为 footprint 几何数据。
+  const footprint = (o) => ({ x: o.x, z: o.z, width: o.width, depth: o.depth, heading: o.heading ?? 0 });
+  // 读取一个时刻的完整建模状态：Ego 属性及其当前可感知的 TrafficObject 属性。
+  const snapshot = () => {
+    const perceived = rolloutEx.perceived();
+    const distance = rolloutEx.frontDistance();
+    return {
+      ego: {
+        position: { x: v.x, z: v.z }, speed: v.speed, heading: v.heading ?? 0,
+        footprint: footprint(v), targetSpeed: v.target,
+        stopLineDist: Number.isFinite(distance) ? distance : null
+      },
+      perceived: [...perceived.vehicles, ...perceived.pedestrians].map((o) => ({
+        id: o.id, actorType: o.type, position: { x: o.x, z: o.z }, speed: o.speed ?? 0,
+        heading: o.heading ?? 0, footprint: footprint(o)
+      }))
+    };
+  };
+  const states = [];
+  // 第一阶段：逐步执行候选并采样状态，不在循环内评估几何碰撞约束。
+  for (let k = 0; k <= VLM_CANDIDATE_HORIZON_STEPS; k++) {
+    if (!sim.complete) {
+      // 更新车道跟随预瞄距离，并基于当前状态和候选动作求本步期望速度。
+      v.maneuver = { lane_offset_m: 0, lookahead_m: clamp(3 + Math.abs(v.speed) * 0.45, 3, 10) };
+      const env = rolloutEx.env();
+      const { target: raw } = maneuverTarget(sim, v, m, env);
+      // 只应用候选动作和 SafePass 限速；此 rollout 不运行 AEB 冲突预测或 AEB 限速。
+      v.target = rolloutEx.limitSafePassTarget(sim, v, raw, m);
+    }
+    // 无论此前是否记录过碰撞，都保存当前时刻的状态。
+    states.push(snapshot());
+    // 只在采满 4.5 秒时域后停止；碰撞或到达终点都不会截断状态序列。
+    if (k === VLM_CANDIDATE_HORIZON_STEPS) break;
+    // 调用与 sim.step 共用的状态推进实现，关闭通用 safety 修正以使用候选控制。
+    sim.autopilot = true; sim.safety = false;
+    sim.advanceState(DT);
+  }
+
+  // 第三阶段：将完整帧序列发送给 STOCL HTTP 服务，由服务端构造 Scenario 并评估 Safe。
+  const evaluation = await evaluateSafeFormula(states);
+  return includeStates ? { ...evaluation, states } : evaluation;
+}
+
+/** Export the exact VLM candidate rollout frames for offline scenario evaluation. */
+export function captureVlmCandidateRollout(ex, candidate) {
+  return rolloutVlmCandidate(ex, candidate, true);
+}
+
+/** 对单个 VLM 候选执行安全检查，并返回是否允许该候选。 */
+export async function checkCandidateSafety(ex, candidate) {
+  // 没有候选动作时无法进行 rollout，直接判定为不安全。
+  if (!candidate) return false;
+  // 在克隆仿真中执行候选，并取得所有采样时刻的 Safe 公式检查结果。
+  let score;
+  try { score = await rolloutVlmCandidate(ex, candidate); }
+  catch (error) {
+    console.error(`[safe-gate] STOCL evaluation failed; rejecting ${candidate.candidate_id ?? candidate.action_type}: ${error.message}`);
+    return false;
+  }
+  // 候选是否安全只由所有采样时刻的 Safe 公式结果决定。
+  return score.safe_formula;
 }
 
 export function observableTeacher(ex, obs = ex.observe()) {

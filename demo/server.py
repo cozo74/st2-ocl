@@ -78,6 +78,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", type=int, default=9030)
     parser.add_argument("--model-url", default="http://127.0.0.1:9031", help="DriveJev model service (serve/serve.py)")
+    parser.add_argument("--stocl-url", default="http://127.0.0.1:8765", help="STOCL HTTP scenario evaluator")
     parser.add_argument("--kev-url", default="http://127.0.0.1:8014", help="local Jev-compatible /v1/systemone server")
     parser.add_argument("--jev-model", default="~typesafe/jev-latest", help="OpenRouter Jev model id")
     parser.add_argument("--jev-input-price", type=float, default=0.042, help="USD per million input tokens (cost display)")
@@ -160,6 +161,14 @@ def main():
                     status, value = 503, {"error": "DriveJev model service unavailable", "detail": str(exc)}
                 except ValueError as exc:
                     status, value = 502, {"error": "DriveJev model service returned invalid JSON", "detail": str(exc)}
+                self.send(status, value)
+            elif path == "/api/stocl/evaluate/scenario":
+                try:
+                    status, value = http_json(args.stocl_url.rstrip("/") + "/api/v1/evaluate/scenario", payload, timeout=20)
+                except OSError as exc:
+                    status, value = 503, {"error": "STOCL scenario evaluator unavailable", "detail": str(exc)}
+                except ValueError as exc:
+                    status, value = 502, {"error": "STOCL evaluator returned invalid JSON", "detail": str(exc)}
                 self.send(status, value)
             elif path in {"/api/jev", "/api/kev"}:
                 self.decision(path.rsplit("/", 1)[1], payload)

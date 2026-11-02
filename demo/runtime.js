@@ -12,7 +12,7 @@ import { renderProfile } from "/third_party/jevpilot/src/render-profile.js";
 import { clamp, nearestOnPath } from "/third_party/jevpilot/src/math.js";
 import { maneuverSteering, physics } from "/third_party/jevpilot/src/planning.js";
 import { maneuverTarget, DT } from "/simulator/executor.mjs";
-import { InteractionExecutor, observableTeacher } from "/simulator/interaction_executor.mjs";
+import { InteractionExecutor, observableTeacher, checkCandidateSafety } from "/simulator/interaction_executor.mjs";
 
 // simulator/harness.mjs CAMERA and render profile.
 export const CAMERA = Object.freeze({
@@ -203,8 +203,8 @@ export class SensorRig {
  * never saw. The stall watchdog only zeroes the ego target while no answer has arrived.
  */
 export class DemoExecutor extends InteractionExecutor {
-  constructor(sim, { aeb, obsSchema = "1.1" }) {
-    super(sim, { aeb, obsSchema });
+  constructor(sim, { aeb, safePass = true, obsSchema = "1.1" }) {
+    super(sim, { aeb, safePass, obsSchema });
     this.stalled = false;
     // Harness episodes start at t = 0; the demo attaches to a running world, so the ego
     // stationary clock starts at engagement.
@@ -283,7 +283,7 @@ export class SemanticRuntime {
     return !!this.executor;
   }
   // obsSchema: the student observation the served head was trained on ("1.0" heads see the schema-1.0 fields only).
-  async engage(sim, pilot, { aeb, obsSchema }) {
+  async engage(sim, pilot, { aeb, safePass = true, obsSchema }) {
     this.disengage();
     this.sim = sim;
     this.pilot = pilot;
@@ -293,7 +293,7 @@ export class SemanticRuntime {
       await this.sensor.bind(sim);
       if (generation !== this.generation) return false;
     }
-    this.executor = new DemoExecutor(sim, { aeb, obsSchema });
+    this.executor = new DemoExecutor(sim, { aeb, safePass, obsSchema });
     this.executor.episodeId = `demo-${pilot.id}-${sim.world.type}-${sim.world.seed}-${Date.now().toString(36)}`;
     // Bootstrap until the first decision, as in the harness: cruise when moving, hold when stopped.
     this.executor.select(sim.player.speed >= 0.5 ? "keep_route_cruise" : "hold_stop");
@@ -416,15 +416,63 @@ export class SemanticRuntime {
     this.inflight = row.observation_id;
     this.stats.requests++;
     try {
-      const response = await fetch("/api/drivejev/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(4000),
-      });
-      const result = await response.json();
-      if (generation !== this.generation) return;
-      if (!response.ok) throw Error(result.error || `DriveJev HTTP ${response.status}`);
+      const candidates = [...row.candidates];
+      let result;
+      // The model service requires 2-12 candidates; a lone option can be checked locally.
+      if (candidates.length === 1) {
+        const only = candidates[0];
+        result = { candidate_id: only.candidate_id, probabilities: { [only.candidate_id]: 1 },
+          observation_id: row.observation_id, model_version: "safety-gate-singleton" };
+      } else {
+        const response = await fetch("/api/drivejev/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...body, candidates }),
+          signal: AbortSignal.timeout(4000),
+        });
+        result = await response.json();
+        if (generation !== this.generation) return;
+        if (!response.ok) throw Error(result.error || `DriveJev HTTP ${response.status}`);
+      }
+      const preferred = candidates.find((candidate) => candidate.candidate_id === result.candidate_id);
+      if (!preferred) throw Error(`DriveJev selected a candidate outside the current set: ${result.candidate_id}`);
+      const probability = (candidate) => {
+        const value = Number(result.probabilities?.[candidate.candidate_id]);
+        return Number.isFinite(value) ? value : -Infinity;
+      };
+      const remaining = candidates.filter((candidate) => candidate !== preferred)
+        .map((candidate, index) => ({ candidate, index }))
+        .sort((a, b) => probability(b.candidate) - probability(a.candidate) || a.index - b.index)
+        .map(({ candidate }) => candidate);
+      const candidateChecks = [];
+      const candidateCheckTimes = [];
+      const safetyCheckMs = () => candidateCheckTimes.reduce((sum, value) => sum + value, 0);
+      let chosen = null;
+      for (const candidate of [preferred, ...remaining]) {
+        const checkStarted = performance.now();
+        const safe = await checkCandidateSafety(executor, candidate);
+        const elapsedMs = performance.now() - checkStarted;
+        candidateCheckTimes.push(elapsedMs);
+        candidateChecks.push({ candidate_id: candidate.candidate_id, safe, elapsed_ms: Math.round(elapsedMs * 1000) / 1000 });
+        if (safe) { chosen = candidate; break; }
+      }
+      if (chosen) {
+        const selectedBy = chosen === preferred ? "vlm" : "highest_remaining_probability";
+        result = { ...result, candidate_id: chosen.candidate_id,
+          safety_gate: { safe: true, attempts: candidateChecks.length, selected_by: selectedBy,
+            safety_check_ms: Math.round(safetyCheckMs() * 1000) / 1000,
+            candidate_checks: candidateChecks } };
+        if (chosen !== preferred && Number.isFinite(probability(chosen))) result.confidence = { ...(result.confidence ?? {}), value: probability(chosen) };
+      } else {
+        const fallback = candidates.find((candidate) => candidate.candidate_id === "emergency_brake");
+        if (!fallback) throw Error("Safety gate exhausted all candidates and emergency_brake is unavailable");
+        result = { ...result, candidate_id: fallback.candidate_id,
+          probabilities: { ...(result.probabilities ?? {}), [fallback.candidate_id]: result.probabilities?.[fallback.candidate_id] ?? 0 },
+          model_version: result.model_version ?? "safety-gate-fallback",
+          safety_gate: { safe: false, exhausted: true, fallback: fallback.candidate_id, attempts: candidateChecks.length,
+            safety_check_ms: Math.round(safetyCheckMs() * 1000) / 1000,
+            candidate_checks: candidateChecks } };
+      }
       this.errors = 0;
       this.lastResponseWall = performance.now();
       this.stats.completed++;

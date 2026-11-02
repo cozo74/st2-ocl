@@ -95,9 +95,14 @@ export class DriveWorld extends Simulation {
   }
 
   step(dt) {
-    if (this.paused || this.crash) return;
+    return this.advanceState(dt);
+  }
+
+  // Keep DriveJev's directors in the shared state transition used by step() and rollouts.
+  advanceState(dt) {
+    if (this.paused || (this.crash && !this.rolloutContinueAfterCollision)) return;
     this.director.before(dt);
-    super.step(dt);
+    super.advanceState(dt);
     this.director.after();
   }
 

@@ -2,7 +2,7 @@
  * DriveJev closed-loop runner: static server + model proxy + N headless Chrome workers.
  *
  *   node simulator/run.mjs --jobs eval/suites/test.json --out runs/test-ours [--workers 4] [--port 8981]
- *        [--model-url http://127.0.0.1:9031/predict] [--set policy=model,arm=default,aeb=false,realtime=false]
+ *        [--model-url http://127.0.0.1:9031/predict] [--set policy=model,arm=default,aeb=false,safePass=false,realtime=false]
  *
  * Each job is a runEpisode()/runRealtime() config ({seed, type, hazards, max_time_s, ...}); `--set`
  * overrides fields for every job. Writes <out>/episodes.jsonl and <out>/run.json. <out> must be new.
@@ -22,6 +22,7 @@ const jobsPath = arg('--jobs'), outArg = arg('--out');
 if (!jobsPath || !outArg) { console.error('usage: node simulator/run.mjs --jobs <suite.json> --out <new dir> [--workers 4] [--model-url URL] [--set k=v,...]'); process.exit(2); }
 const out = path.resolve(outArg), workers = Number(arg('--workers', '4')), port = Number(arg('--port', '8981'));
 const modelUrl = arg('--model-url', 'http://127.0.0.1:9031/predict');
+const stoclUrl = arg('--stocl-url', 'http://127.0.0.1:8765');
 const parse = (v) => (v === 'true' ? true : v === 'false' ? false : Number.isFinite(Number(v)) && v !== '' ? Number(v) : v);
 const overrides = Object.fromEntries((arg('--set', '') || '').split(',').filter(Boolean).map((kv) => { const [k, v] = kv.split('='); return [k, parse(v)]; }));
 if (fs.existsSync(out) && fs.readdirSync(out).length) throw Error(`${out} is not empty; choose a new output directory`);
@@ -41,6 +42,13 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1');
     if (url.pathname === '/predict') {
       const upstream = await fetch(modelUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: await readBody(req) });
+      res.writeHead(upstream.status, { 'content-type': 'application/json' }); res.end(await upstream.text()); return;
+    }
+    if (url.pathname === '/api/stocl/evaluate/scenario') {
+      const upstream = await fetch(`${stoclUrl.replace(/\/$/, '')}/api/v1/evaluate/scenario`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: await readBody(req),
+        signal: AbortSignal.timeout(20000),
+      });
       res.writeHead(upstream.status, { 'content-type': 'application/json' }); res.end(await upstream.text()); return;
     }
     if (url.pathname === '/favicon.ico') { res.writeHead(204); res.end(); return; }

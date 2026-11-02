@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { DriveScene } from '/third_party/jevpilot/src/scene.js';
 import { renderProfile } from '/third_party/jevpilot/src/render-profile.js';
 import { InteractionWorld, WORLD_VERSION } from './interactions.mjs';
-import { InteractionExecutor, observableTeacher, DT, VERSION } from './interaction_executor.mjs';
+import { InteractionExecutor, observableTeacher, checkCandidateSafety, DT, VERSION } from './interaction_executor.mjs';
 
 // JevPilot render profile used for every model frame.
 Object.assign(renderProfile, { pixelRatio: 1, antialias: false, shadowSize: 512, detailedFoliage: false, leafCards: 8 });
@@ -54,11 +54,11 @@ export function capture() {
 }
 
 export async function reset(cfg) {
-  config = { seed: 420000, type: 'town', hazards: [], randomRoute: true, trafficScale: 1, empty: false, aeb: false, obs_schema: '1.1', legacyHazards: false, ...cfg };
+  config = { seed: 420000, type: 'town', hazards: [], randomRoute: true, trafficScale: 1, empty: false, aeb: false, safePass: true, obs_schema: '1.1', legacyHazards: false, ...cfg };
   config.obs_schema = { 1: '1.0', '1': '1.0', 1.1: '1.1' }[config.obs_schema] ?? String(config.obs_schema); // `--set obs_schema=1.0` arrives as a number
   sim = new InteractionWorld(config.seed, config.type, { randomRoute: config.randomRoute && config.type !== 'highway', hazards: config.hazards, trafficScale: config.trafficScale,
     empty: config.empty, hazardCooldown: config.hazardCooldown, legacyHazards: config.legacyHazards });
-  ex = new InteractionExecutor(sim, { aeb: config.aeb, obsSchema: config.obs_schema });
+  ex = new InteractionExecutor(sim, { aeb: config.aeb, safePass: config.safePass, obsSchema: config.obs_schema });
   ex.episodeId = config.episode_id ?? `drivejev-${config.type}-${config.seed}`;
   if (leaf) { leaf.dispose(); leaf = null; }
   if (scene) { scene.sim = sim; scene.build(); } else scene = new DriveScene(canvas, sim, document.querySelector('#vector-layer'));
@@ -88,6 +88,20 @@ function crashHazard() {
 }
 
 const recordRound = (x, digits = 2) => Number.isFinite(x) ? Math.round(x * 10 ** digits) / 10 ** digits : null;
+const recordMs = (x) => recordRound(x, 3);
+function safetyTimingMetrics(perDecisionMs, rolloutCount) {
+  const sorted = [...perDecisionMs].sort((a, b) => a - b);
+  const total = perDecisionMs.reduce((sum, value) => sum + value, 0);
+  const at = (q) => sorted.length ? recordMs(sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))]) : null;
+  return {
+    safety_gate_decisions: sorted.length,
+    safety_check_rollouts: rolloutCount,
+    safety_check_ms_total: recordMs(total),
+    safety_check_ms_mean_per_rollout: rolloutCount ? recordMs(total / rolloutCount) : null,
+    safety_check_ms_p50_per_decision: at(0.5),
+    safety_check_ms_p95_per_decision: at(0.95),
+  };
+}
 function egoSnapshot(speedOverride = null) {
   const v = sim.player;
   return { x_m: recordRound(v.x), z_m: recordRound(v.z), heading_rad: recordRound(v.heading),
@@ -176,11 +190,69 @@ function summary(info, extra) {
     hard_brake_steps: truth.hard_brake_steps, jerk_rms_mps3: truth.jerk_rms_mps3, hazards: sim.director?.log ?? [], crash_hazard: crashHazard(), front_events: ex.frontBumperEvents, ...extra };
 }
 
+async function requestSafeVlmAction(ex, obs, send) {
+  const candidates = [...obs.candidates];
+  let result, vlmApiLatencyMs = null;
+  // The model service requires 2-12 candidates. If only one is offered, its choice is implicit.
+  if (candidates.length === 1) {
+    const only = candidates[0];
+    result = { candidate_id: only.candidate_id, probabilities: { [only.candidate_id]: 1 },
+      observation_id: obs.observation_id, model_version: 'safety-gate-singleton' };
+  } else {
+    const apiStarted = performance.now();
+    result = await send(candidates);
+    vlmApiLatencyMs = performance.now() - apiStarted;
+  }
+  // This measures the VLM request and response parsing, separately from rollout safety checks below.
+  result = { ...result, vlm_api_latency_ms: recordMs(vlmApiLatencyMs) };
+  const preferred = candidates.find((candidate) => candidate.candidate_id === result.candidate_id);
+  if (!preferred) throw Error(`VLM selected a candidate outside the current set: ${result.candidate_id}`);
+  const probability = (candidate) => {
+    const value = Number(result.probabilities?.[candidate.candidate_id]);
+    return Number.isFinite(value) ? value : -Infinity;
+  };
+  const remaining = candidates.filter((candidate) => candidate !== preferred)
+    .map((candidate, index) => ({ candidate, index }))
+    .sort((a, b) => probability(b.candidate) - probability(a.candidate) || a.index - b.index)
+    .map(({ candidate }) => candidate);
+  const candidateChecks = [];
+  const candidateCheckTimes = [];
+  const safetyCheckMs = () => candidateCheckTimes.reduce((sum, value) => sum + value, 0);
+  for (const candidate of [preferred, ...remaining]) {
+    const checkStarted = performance.now();
+    const safe = await checkCandidateSafety(ex, candidate);
+    const elapsedMs = performance.now() - checkStarted;
+    candidateCheckTimes.push(elapsedMs);
+    candidateChecks.push({ candidate_id: candidate.candidate_id, safe, elapsed_ms: recordMs(elapsedMs) });
+    if (safe) {
+      const selectedBy = candidate === preferred ? 'vlm' : 'highest_remaining_probability';
+      const accepted = { ...result, candidate_id: candidate.candidate_id,
+        safety_gate: { safe: true, attempts: candidateChecks.length, selected_by: selectedBy,
+          safety_check_ms: recordMs(safetyCheckMs()),
+          candidate_checks: candidateChecks } };
+      if (candidate !== preferred && Number.isFinite(probability(candidate))) accepted.confidence = { ...(result.confidence ?? {}), value: probability(candidate) };
+      return accepted;
+    }
+  }
+  // No rollout-safe VLM option remains. Use maximum braking as the emergency fallback.
+  const fallback = candidates.find((candidate) => candidate.candidate_id === 'emergency_brake');
+  if (!fallback) throw Error('Safety gate exhausted all candidates and emergency_brake is unavailable');
+  return { ...result, candidate_id: fallback.candidate_id,
+    probabilities: { ...(result.probabilities ?? {}), [fallback.candidate_id]: result.probabilities?.[fallback.candidate_id] ?? 0 },
+    model_version: result.model_version ?? 'safety-gate-fallback',
+    safety_gate: { safe: false, exhausted: true, fallback: fallback.candidate_id, attempts: candidateChecks.length,
+      safety_check_ms: recordMs(safetyCheckMs()),
+      candidate_checks: candidateChecks } };
+}
+
 export async function runEpisode(cfg) {
   const info = await reset(cfg);
   const policy = cfg.policy ?? 'model', maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], actions = {}, rejections = {}, trace = [], behaviorIntervals = [], incidents = createIncidentLog();
+  const vlmApiLatencySamples = [];
   recordBehaviorInterval(behaviorIntervals, 'local_bootstrap', true, 'bootstrap');
   let decisions = 0, accepted = 0, stuck = 0, stuckClear = 0, speedSum = 0;
+  const safetyGateTimes = [];
+  let safetyCheckRollouts = 0;
   const t0 = performance.now();
   while (sim.time < maxTime && !sim.crash && !sim.complete) {
     if (ex.stepId % 5 === 0) {
@@ -195,10 +267,19 @@ export async function runEpisode(cfg) {
           teacherDetail = t;
           result = { candidate_id: t.preferred, probabilities: t.probabilities, observation_id: obs.observation_id, model_version: 'observable-teacher' };
         } else {
-          const started = performance.now(), response = await post(cfg.model_url ?? '/predict', requestBody(cfg, obs, history, shot));
-          result = await response.json();
-          if (!response.ok) throw Error(`model ${response.status}: ${JSON.stringify(result).slice(0, 300)}`);
+          const started = performance.now();
+          result = await requestSafeVlmAction(ex, obs, async (candidates) => {
+            const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, { ...obs, candidates }, history, shot));
+            const output = await response.json();
+            if (!response.ok) throw Error(`model ${response.status}: ${JSON.stringify(output).slice(0, 300)}`);
+            return output;
+          });
           latencyMs = performance.now() - started; latencies.push(latencyMs);
+          if (Number.isFinite(result.vlm_api_latency_ms)) vlmApiLatencySamples.push(result.vlm_api_latency_ms);
+        }
+        if (result.safety_gate) {
+          safetyGateTimes.push(result.safety_gate.safety_check_ms ?? 0);
+          safetyCheckRollouts += result.safety_gate.candidate_checks?.length ?? 0;
         }
         const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
         incidents.rememberDecision({ obs, shot, history, result: { ...result, teacher_detail: teacherDetail }, acceptedResult: res,
@@ -220,15 +301,24 @@ export async function runEpisode(cfg) {
   if (behaviorIntervals.length) behaviorIntervals[behaviorIntervals.length - 1].interval_end_s = recordRound(sim.time);
   return summary(info, { policy, mode: 'batch', wall_s: (performance.now() - t0) / 1000, mean_speed_mps: speedSum / Math.max(sim.time, 1e-6), stuck_s: stuck, stuck_clear_s: stuckClear,
     decisions, accepted, rejections, action_counts: actions, behavior_intervals: behaviorIntervals, diagnostic_events: incidents.events,
-    latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null, trace: cfg.trace ? trace : undefined });
+    latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null,
+    vlm_api_call_count: vlmApiLatencySamples.length,
+    vlm_api_latency_ms_samples: vlmApiLatencySamples,
+    vlm_api_latency_ms_mean: vlmApiLatencySamples.length ? recordMs(vlmApiLatencySamples.reduce((sum, value) => sum + value, 0) / vlmApiLatencySamples.length) : null,
+    vlm_api_latency_ms_p50: vlmApiLatencySamples.length ? vlmApiLatencySamples.slice().sort((a, b) => a - b)[Math.floor(vlmApiLatencySamples.length / 2)] : null,
+    vlm_api_latency_ms_p95: vlmApiLatencySamples.length ? vlmApiLatencySamples.slice().sort((a, b) => a - b)[Math.floor(vlmApiLatencySamples.length * 0.95)] : null,
+    ...safetyTimingMetrics(safetyGateTimes, safetyCheckRollouts), trace: cfg.trace ? trace : undefined });
 }
 
 /** Real time: physics follows the wall clock at 20 Hz; at most one request in flight; answers older than 0.5 s are dropped. */
 export async function runRealtime(cfg) {
   const info = await reset(cfg);
   const maxTime = cfg.max_time_s ?? 120, frames = [], latencies = [], rejections = {}, behaviorIntervals = [], incidents = createIncidentLog();
+  const vlmApiLatencySamples = [];
   recordBehaviorInterval(behaviorIntervals, 'local_bootstrap', true, 'bootstrap');
   let inflight = false, requests = 0, accepted = 0, stuck = 0, speedSum = 0;
+  const safetyGateTimes = [];
+  let safetyCheckRollouts = 0;
   frames.push({ step: ex.stepId, ...capture() }); // history frame for the first request at 0.5 s
   ex.observe();
   const start = performance.now();
@@ -236,13 +326,22 @@ export async function runRealtime(cfg) {
     inflight = true; requests++;
     const t = performance.now();
     try {
-      const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, obs, history, shot));
-      const result = await response.json();
+      const result = await requestSafeVlmAction(ex, obs, async (candidates) => {
+        const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, { ...obs, candidates }, history, shot));
+        const output = await response.json();
+        if (!response.ok) throw Error(`model ${response.status}: ${JSON.stringify(output).slice(0, 300)}`);
+        return output;
+      });
       const latencyMs = performance.now() - t; latencies.push(latencyMs);
-      if (response.ok) { const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
-        incidents.rememberDecision({ obs, shot, history, result, acceptedResult: res, source: 'model', latencyMs, state: decisionState });
-        recordBehaviorInterval(behaviorIntervals, result.candidate_id, res.accepted, 'model');
-        if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1; }
+      if (Number.isFinite(result.vlm_api_latency_ms)) vlmApiLatencySamples.push(result.vlm_api_latency_ms);
+      if (result.safety_gate) {
+        safetyGateTimes.push(result.safety_gate.safety_check_ms ?? 0);
+        safetyCheckRollouts += result.safety_gate.candidate_checks?.length ?? 0;
+      }
+      const res = ex.accept({ ...result, episode_id: ex.episodeId }, { allowDelayed: true, maxAgeSeconds: 0.5 });
+      incidents.rememberDecision({ obs, shot, history, result, acceptedResult: res, source: 'model', latencyMs, state: decisionState });
+      recordBehaviorInterval(behaviorIntervals, result.candidate_id, res.accepted, 'model');
+      if (res.accepted) accepted++; else rejections[res.reason] = (rejections[res.reason] ?? 0) + 1;
     } finally { inflight = false; }
   };
   while (sim.time < maxTime && !sim.crash && !sim.complete) {
@@ -269,7 +368,12 @@ export async function runRealtime(cfg) {
   if (behaviorIntervals.length) behaviorIntervals[behaviorIntervals.length - 1].interval_end_s = recordRound(sim.time);
   return summary(info, { policy: 'model', mode: 'realtime', wall_s: wall, realtime_factor: sim.time / wall, mean_speed_mps: speedSum / Math.max(sim.time, 1e-6), stuck_s: stuck,
     requests, accepted, applied_hz: accepted / Math.max(sim.time, 1e-6), rejections, behavior_intervals: behaviorIntervals, diagnostic_events: incidents.events, latency_ms_p50: latencies[Math.floor(latencies.length / 2)] ?? null,
-    latency_ms_p95: latencies[Math.floor(latencies.length * 0.95)] ?? null });
+    vlm_api_call_count: vlmApiLatencySamples.length,
+    vlm_api_latency_ms_samples: vlmApiLatencySamples,
+    vlm_api_latency_ms_mean: vlmApiLatencySamples.length ? recordMs(vlmApiLatencySamples.reduce((sum, value) => sum + value, 0) / vlmApiLatencySamples.length) : null,
+    vlm_api_latency_ms_p50: vlmApiLatencySamples.length ? vlmApiLatencySamples.slice().sort((a, b) => a - b)[Math.floor(vlmApiLatencySamples.length / 2)] : null,
+    vlm_api_latency_ms_p95: vlmApiLatencySamples.length ? vlmApiLatencySamples.slice().sort((a, b) => a - b)[Math.floor(vlmApiLatencySamples.length * 0.95)] : null,
+    latency_ms_p95: latencies[Math.floor(latencies.length * 0.95)] ?? null, ...safetyTimingMetrics(safetyGateTimes, safetyCheckRollouts) });
 }
 
 window.drivejev = { reset, runEpisode, runRealtime, capture, get sim() { return sim; }, get executor() { return ex; } };

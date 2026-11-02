@@ -99,6 +99,7 @@ let pilot = PILOTS.find((p) => p.id === params.get("pilot")) ?? PILOTS[0];
 let backends = { drivejev: { status: "unknown" }, jev: { configured: false }, kev: { available: false } };
 // One switch: the executor's AEB for semantic pilots, JevPilot's traffic safety envelope for Jev/Kev.
 let safetyBrake = params.get("aeb") !== "off" && params.get("safety") !== "off";
+let safePassEnabled = params.get("safe_pass") !== "off";
 let loading = true,
   lastMapDraw = 0;
 showLoading("Loading car and scenery…");
@@ -414,7 +415,8 @@ async function setPilot(on) {
     const token = generation;
     let ready = false;
     try {
-      ready = await runtime.engage(sim, pilot, { aeb: safetyBrake, obsSchema: backends.drivejev?.arms?.[pilot.arm]?.observation_schema ?? "1.1" });
+      ready = await runtime.engage(sim, pilot, { aeb: safetyBrake, safePass: safePassEnabled,
+        obsSchema: backends.drivejev?.arms?.[pilot.arm]?.observation_schema ?? "1.1" });
     } catch (error) {
       toast(error.message, "error");
     }

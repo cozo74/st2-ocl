@@ -45,6 +45,11 @@ def metrics(rows):
     events = Counter(h["kind"] for e in good for h in e.get("hazards", []) if "event" not in h)
     hz_crash = Counter(e.get("crash_hazard") for e in good if e.get("crash") and e.get("crash_hazard"))
     lat = sorted(e["latency_ms_p50"] for e in good if e.get("latency_ms_p50"))
+    vlm_api_lat = sorted(x for e in good for x in e.get("vlm_api_latency_ms_samples", []) if isinstance(x, (int, float)))
+    safety_measured = any("safety_check_ms_total" in e for e in good)
+    safety_total_ms = sum(e.get("safety_check_ms_total") or 0 for e in good)
+    safety_rollouts = sum(e.get("safety_check_rollouts") or 0 for e in good)
+    safety_decisions = sum(e.get("safety_gate_decisions") or 0 for e in good)
     return {
         "episodes": len(good), "errors": len(rows) - len(good),
         "success": int(sum(success)), "success_rate": sum(success) / len(good), "success_ci95": bootstrap(success),
@@ -61,7 +66,17 @@ def metrics(rows):
         "hard_brake_s_per_km": sum((e.get("hard_brake_steps") or 0) * 0.05 for e in good) / max(km, 1e-9),
         "aeb_events": sum(e.get("aeb_events") or 0 for e in good),
         "hazard_events": dict(events), "hazard_collisions_by_kind": dict(hz_crash),
+        "safety_check_ms_total": safety_total_ms if safety_measured else None,
+        "safety_gate_decisions": safety_decisions if safety_measured else None,
+        "safety_check_rollouts": safety_rollouts if safety_measured else None,
+        "safety_check_ms_per_episode": safety_total_ms / len(good) if safety_measured else None,
+        "safety_check_ms_per_rollout": safety_total_ms / safety_rollouts if safety_measured and safety_rollouts else None,
+        "safety_check_ms_per_decision": safety_total_ms / safety_decisions if safety_measured and safety_decisions else None,
         "latency_ms_p50": lat[len(lat) // 2] if lat else None,
+        "vlm_api_call_count": len(vlm_api_lat),
+        "vlm_api_latency_ms_mean": sum(vlm_api_lat) / len(vlm_api_lat) if vlm_api_lat else None,
+        "vlm_api_latency_ms_p50": vlm_api_lat[len(vlm_api_lat) // 2] if vlm_api_lat else None,
+        "vlm_api_latency_ms_p95": vlm_api_lat[min(len(vlm_api_lat) - 1, int(len(vlm_api_lat) * 0.95))] if vlm_api_lat else None,
         "applied_hz": (sum(e.get("applied_hz", 0) for e in good) / len(good)) if any("applied_hz" in e for e in good) else None,
     }
 
@@ -94,7 +109,9 @@ def main():
             ci = m["success_ci95"]
             print(f"  {k:20s} n={m['episodes']:3d} success={m['success']:2d} ({m['success_rate']:.2f} [{ci[0]:.2f},{ci[1]:.2f}]) arrive={m['arrival_rate']:.2f} "
                   f"crash={m['collisions']} (hazard {m['hazard_collisions']}) viol={m['violations']} compl={m['route_completion']:.2f} v={m['mean_speed_mps']:.1f} "
-                  f"stuck={m['stuck_s_per_episode']:.1f}/{m['stuck_clear_s_per_episode']:.1f}s aeb={m['aeb_events']} lat={m['latency_ms_p50']}")
+                  f"stuck={m['stuck_s_per_episode']:.1f}/{m['stuck_clear_s_per_episode']:.1f}s aeb={m['aeb_events']} lat={m['latency_ms_p50']} "
+                  f"vlm_api_ms={m['vlm_api_latency_ms_p50']} (n={m['vlm_api_call_count']}) "
+                  f"safe_ms={m['safety_check_ms_total']} ({m['safety_check_rollouts']} rollouts)")
         hz = scen["all"].get("hazard_events", {})
         if hz:
             print("  hazards:", {k: f"{scen['all']['hazard_collisions_by_kind'].get(k, 0)}/{n}" for k, n in sorted(hz.items())})

@@ -30,6 +30,7 @@ export const ACTIONS = {
 };
 const MOTION = ['keep_route_cruise', 'proceed_route', 'route_turn'];
 const STOPPING = ['stop_at_line', 'yield_agent', 'emergency_brake'];
+const SAFE_PASS_LOW_SPEED_MPS = 3;
 const r1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
 const r2 = (x) => (Number.isFinite(x) ? Math.round(x * 100) / 100 : null);
 
@@ -86,8 +87,8 @@ export function accSpeed(v, lead) {
 }
 
 export class SemanticExecutor {
-  constructor(sim, { aeb = false } = {}) {
-    this.sim = sim; this.aeb = aeb; this.sequence = 0; this.stepId = 0; this.acceleration = 0; this.jerk = 0;
+  constructor(sim, { aeb = false, safePass = true } = {}) {
+    this.sim = sim; this.aeb = aeb; this.safePass = safePass; this.sequence = 0; this.stepId = 0; this.acceleration = 0; this.jerk = 0;
     this.maneuver = null; this.lastActions = []; this.frames = new Map(); this.policySource = 'local_executor';
     this.aebEvents = 0; this.aebSteps = 0; this.frontBumperEvents = []; this.violationEvents = []; this.frontLineLocks = new Map();
     this.frontRedViolations = 0; this.frontRequiredStopViolations = 0; this.stationarySince = sim.time; this.episodeId = 'episode';
@@ -102,6 +103,31 @@ export class SemanticExecutor {
   line(c = this.crossing()) { return c ? { ...pointAt(this.sim.player.route.points, c.stopS), heading: c.approach, node_id: c.nodeId, stop_s: c.stopS } : null; }
   // 返回自车前保险杠到该 crossing 停止线平面的有符号距离：正值在线前，负值表示已经越线；未找到 crossing 时返回 null。
   frontDistance(c = this.crossing()) { return c ? stopLineDistance(this.sim.player, this.line(c)) : null; }
+
+  limitSafePassTarget(sim, v, target, maneuver) {
+    const crossing = sim.crossingFor(v), node = crossing ? sim.world.byId[crossing.nodeId] : null;
+    const line = crossing ? { ...pointAt(v.route.points, crossing.stopS), heading: crossing.approach } : null;
+    const distance = line ? stopLineDistance(v, line) : NaN;
+    const inApproachZone = distance > 0 && distance <= 3 * v.speed;
+    const lowSpeedNearLine = v.speed <= SAFE_PASS_LOW_SPEED_MPS
+      && distance > 0 && distance < v.speed;
+    // 不读取仿真器的信号灯真值；所有信号灯路口的 keep_route_cruise 都使用同一套限速。
+    if (!this.safePass || this.policySource === 'observable-teacher'
+      || maneuver?.action_type !== 'keep_route_cruise' || node?.control !== 'signal'
+      || !inApproachZone) return target;
+
+    // 已进入低速近线状态后保持不超过 3 m/s，直到前保险杠越过停止线；随后恢复原候选目标速度。
+    if (lowSpeedNearLine) return Math.min(target, SAFE_PASS_LOW_SPEED_MPS);
+
+    // 按最大制动 8 m/s² 计算速度包络：希望在距线 3 m 处降至 3 m/s。
+    // 同时满足 CanStop 的停车距离边界；公式中的 stopLineDist 也是前保险杠到线的距离。
+    const remainingToLowSpeedPoint = Math.max(0, distance - SAFE_PASS_LOW_SPEED_MPS);
+    const lowSpeedEnvelope = Math.sqrt(
+      SAFE_PASS_LOW_SPEED_MPS ** 2 + 2 * BRAKING * remainingToLowSpeedPoint,
+    );
+    const canStopEnvelope = Math.sqrt(2 * BRAKING * distance);
+    return Math.min(target, lowSpeedEnvelope, canStopEnvelope);
+  }
 
   /** Diagnostic-only snapshot: simulator truth, sensor-visible actors and the current rule/conflict estimate. */
   diagnosticSnapshot() {
@@ -257,6 +283,8 @@ export class SemanticExecutor {
       const { target: raw, unreachable } = maneuverTarget(sim, v, m, env);
       if (unreachable && m && !m.feedback.includes('stop_unreachable')) m.feedback.push('stop_unreachable');
       let target = raw;
+      // In the 1–3 s SafeSpeed window, cap VLM driving speed to preserve a stopping margin.
+      target = this.limitSafePassTarget(sim, v, target, m);
       // Optional AEB: only supervises moving behaviours; braking behaviours already slow down.
       const motionNow = !m || MOTION.includes(m.action_type) || (m.action_type === 'route_turn');
       const aebConflict = this.aeb && motionNow && raw > 0.1 && this.stepId % 2 === 0 ? this.predictConflict(env.perceived, raw) : this.aeb && this.aebActive ? this.aebConflict : null;
