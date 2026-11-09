@@ -43,7 +43,7 @@ export function segmentHitsBox(a, b, box, pad = -0.1) {
 }
 
 export class InteractionExecutor extends SemanticExecutor {
-  constructor(sim, { aeb = false, safePass = true, obsSchema = '1.1' } = {}) {
+  constructor(sim, { aeb = false, safePass = false, obsSchema = '1.1' } = {}) {
     super(sim, { aeb, safePass });
     this.obsSchema = obsSchema;
     this.vehicleOcclusion = obsSchema !== '1.0';
@@ -217,13 +217,6 @@ function rollout(ex, candidate) {
  * VLM 候选专用 rollout：先在克隆仿真中执行候选并收集状态序列，再统一检查碰撞约束。
  * 完整预测时域为 VLM_CANDIDATE_HORIZON_STEPS 个 DT 间隔（4.5 秒）；包含 t=0 初始帧时最多保存 91 帧。
  */
-const STOCL_SAFE_SPECIFICATION = `Model DriveJevSafeCheckPaper:
-context Ego
-  inv NearbyRisk: self.perceived->exists(t | t.position.distance(self.position) < (t.speed + self.targetSpeed) * 3 + 12)
-  inv WithoutCollisionFront: self.perceived->forAll(t | self.frontZone.intersects(t.frontZone) = false)
-formula Safe: globally[0,90] (not NearbyRisk or WithoutCollisionFront)
-`;
-
 function finiteNumber(value, fallback = 0) { return Number.isFinite(value) ? value : fallback; }
 function geometryNumber(value) { return Number(finiteNumber(value).toFixed(6)); }
 function pointWkt(position) { return `POINT (${geometryNumber(position.x)} ${geometryNumber(position.z)})`; }
@@ -255,7 +248,7 @@ function toStoclSnapshots(states) {
         frontZone: frontZoneWkt(object) };
     });
     const egoBox = ego.footprint;
-    return { modelName: 'DriveJevSafeCheckPaper', objectsByClass: {
+    return { modelName: 'DriveJevSafeCheck', objectsByClass: {
       Ego: [{ id: 1, position: pointWkt(ego.position), speed: finiteNumber(ego.speed), heading: finiteNumber(ego.heading),
         footprint: rectangleWkt(egoBox), frontZone: frontZoneWkt(ego), targetSpeed: finiteNumber(ego.targetSpeed, ego.speed),
         stopLineDist: Number.isFinite(ego.stopLineDist) ? ego.stopLineDist : null }],
@@ -268,13 +261,19 @@ async function evaluateSafeFormula(states) {
   const endpoint = typeof window !== 'undefined' ? '/api/stocl/evaluate/scenario'
     : (globalThis.process?.env?.STOCL_SCENARIO_URL || 'http://127.0.0.1:8765/api/v1/evaluate/scenario');
   const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ specification: STOCL_SAFE_SPECIFICATION, states: toStoclSnapshots(states), currentPosition: 1, strategy: 'DYNAMIC' }),
+    body: JSON.stringify({ states: toStoclSnapshots(states), currentPosition: 1, strategy: 'DYNAMIC' }),
     signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`STOCL scenario evaluation failed: HTTP ${response.status} ${await response.text()}`);
   const result = await response.json();
-  const safe = result.formulaResults?.find((formula) => formula.formulaName === 'Safe');
-  if (typeof safe?.satisfied !== 'boolean') throw new Error('STOCL response is missing the Safe formula result');
-  return { safe_formula: safe.satisfied, evaluation_ms: result.durationMs };
+  const formula_results = result.formulaResults;
+  if (!formula_results || typeof formula_results !== 'object' || Array.isArray(formula_results)) {
+    throw new Error('STOCL response is missing the formulaResults boolean map');
+  }
+  if (typeof formula_results.Safe !== 'boolean') throw new Error('STOCL response is missing the Safe formula result');
+  if (Object.values(formula_results).some((value) => typeof value !== 'boolean')) {
+    throw new Error('STOCL response contains a formula without a boolean result');
+  }
+  return { formula_results, evaluation_ms: result.durationMs };
 }
 
 async function rolloutVlmCandidate(ex, candidate, includeStates = false) {
@@ -341,19 +340,30 @@ export function captureVlmCandidateRollout(ex, candidate) {
   return rolloutVlmCandidate(ex, candidate, true);
 }
 
-/** 对单个 VLM 候选执行安全检查，并返回是否允许该候选。 */
-export async function checkCandidateSafety(ex, candidate) {
-  // 没有候选动作时无法进行 rollout，直接判定为不安全。
-  if (!candidate) return false;
-  // 在克隆仿真中执行候选，并取得所有采样时刻的 Safe 公式检查结果。
-  let score;
-  try { score = await rolloutVlmCandidate(ex, candidate); }
+/** 对单个 VLM 候选执行 rollout，返回 Safe 与其他 formula 的真值。 */
+export async function evaluateCandidateFormulas(ex, candidate) {
+  if (!candidate) return { formula_results: null, evaluation_ms: null };
+  return rolloutVlmCandidate(ex, candidate);
+}
+
+/** 对单个 VLM 候选执行 rollout，并按 Safe 公式结果判断其是否通过。 */
+export async function evaluateCandidateSafety(ex, candidate) {
+  // 没有候选动作时无法进行 rollout，直接返回不安全且无公式结果。
+  if (!candidate) return { safe: false, formula_results: null, evaluation_ms: null };
+  try {
+    const score = await evaluateCandidateFormulas(ex, candidate);
+    // Safe 单独决定候选是否通过；PrepareToStop 等其他公式只作为控制信号返回。
+    return { ...score, safe: score.formula_results.Safe };
+  }
   catch (error) {
     console.error(`[safe-gate] STOCL evaluation failed; rejecting ${candidate.candidate_id ?? candidate.action_type}: ${error.message}`);
-    return false;
+    return { safe: false, formula_results: null, evaluation_ms: null, error: error.message };
   }
-  // 候选是否安全只由所有采样时刻的 Safe 公式结果决定。
-  return score.safe_formula;
+}
+
+/** 对兼容调用方保留 Boolean 接口；候选准入只看 Safe。 */
+export async function checkCandidateSafety(ex, candidate) {
+  return (await evaluateCandidateSafety(ex, candidate)).safe;
 }
 
 export function observableTeacher(ex, obs = ex.observe()) {

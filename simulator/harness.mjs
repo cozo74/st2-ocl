@@ -13,7 +13,7 @@ import * as THREE from 'three';
 import { DriveScene } from '/third_party/jevpilot/src/scene.js';
 import { renderProfile } from '/third_party/jevpilot/src/render-profile.js';
 import { InteractionWorld, WORLD_VERSION } from './interactions.mjs';
-import { InteractionExecutor, observableTeacher, checkCandidateSafety, DT, VERSION } from './interaction_executor.mjs';
+import { InteractionExecutor, observableTeacher, evaluateCandidateFormulas, evaluateCandidateSafety, DT, VERSION } from './interaction_executor.mjs';
 
 // JevPilot render profile used for every model frame.
 Object.assign(renderProfile, { pixelRatio: 1, antialias: false, shadowSize: 512, detailedFoliage: false, leafCards: 8 });
@@ -54,7 +54,7 @@ export function capture() {
 }
 
 export async function reset(cfg) {
-  config = { seed: 420000, type: 'town', hazards: [], randomRoute: true, trafficScale: 1, empty: false, aeb: false, safePass: true, obs_schema: '1.1', legacyHazards: false, ...cfg };
+  config = { seed: 420000, type: 'town', hazards: [], randomRoute: true, trafficScale: 1, empty: false, aeb: false, safe: false, safePass: false, prepare: false, obs_schema: '1.1', legacyHazards: false, ...cfg };
   config.obs_schema = { 1: '1.0', '1': '1.0', 1.1: '1.1' }[config.obs_schema] ?? String(config.obs_schema); // `--set obs_schema=1.0` arrives as a number
   sim = new InteractionWorld(config.seed, config.type, { randomRoute: config.randomRoute && config.type !== 'highway', hazards: config.hazards, trafficScale: config.trafficScale,
     empty: config.empty, hazardCooldown: config.hazardCooldown, legacyHazards: config.legacyHazards });
@@ -190,7 +190,7 @@ function summary(info, extra) {
     hard_brake_steps: truth.hard_brake_steps, jerk_rms_mps3: truth.jerk_rms_mps3, hazards: sim.director?.log ?? [], crash_hazard: crashHazard(), front_events: ex.frontBumperEvents, ...extra };
 }
 
-async function requestSafeVlmAction(ex, obs, send) {
+async function requestVlmAction(ex, obs, send) {
   const candidates = [...obs.candidates];
   let result, vlmApiLatencyMs = null;
   // The model service requires 2-12 candidates. If only one is offered, its choice is implicit.
@@ -207,6 +207,18 @@ async function requestSafeVlmAction(ex, obs, send) {
   result = { ...result, vlm_api_latency_ms: recordMs(vlmApiLatencyMs) };
   const preferred = candidates.find((candidate) => candidate.candidate_id === result.candidate_id);
   if (!preferred) throw Error(`VLM selected a candidate outside the current set: ${result.candidate_id}`);
+  if (!config.safe) {
+    let prepareToStop = null;
+    if (config.prepare && preferred.action_type === 'keep_route_cruise') {
+      try {
+        const evaluation = await evaluateCandidateFormulas(ex, preferred);
+        prepareToStop = evaluation.formula_results?.PrepareToStop ?? null;
+      } catch (error) {
+        console.error(`[prepare] STOCL evaluation failed; continuing without PrepareToStop: ${error.message}`);
+      }
+    }
+    return { ...result, prepare_to_stop: prepareToStop };
+  }
   const probability = (candidate) => {
     const value = Number(result.probabilities?.[candidate.candidate_id]);
     return Number.isFinite(value) ? value : -Infinity;
@@ -220,13 +232,20 @@ async function requestSafeVlmAction(ex, obs, send) {
   const safetyCheckMs = () => candidateCheckTimes.reduce((sum, value) => sum + value, 0);
   for (const candidate of [preferred, ...remaining]) {
     const checkStarted = performance.now();
-    const safe = await checkCandidateSafety(ex, candidate);
+    const evaluation = await evaluateCandidateSafety(ex, candidate);
+    const safe = evaluation.safe;
     const elapsedMs = performance.now() - checkStarted;
     candidateCheckTimes.push(elapsedMs);
-    candidateChecks.push({ candidate_id: candidate.candidate_id, safe, elapsed_ms: recordMs(elapsedMs) });
+    candidateChecks.push({ candidate_id: candidate.candidate_id, safe,
+      formula_results: evaluation.formula_results, elapsed_ms: recordMs(elapsedMs) });
     if (safe) {
       const selectedBy = candidate === preferred ? 'vlm' : 'highest_remaining_probability';
       const accepted = { ...result, candidate_id: candidate.candidate_id,
+        safe_check_results: evaluation.formula_results,
+        // PrepareToStop is evaluated and recorded with the other formulas either way;
+        // `prepare=false` only disables applying its result as a cruise speed constraint.
+        prepare_to_stop: config.prepare && candidate.action_type === 'keep_route_cruise'
+          ? evaluation.formula_results?.PrepareToStop ?? null : null,
         safety_gate: { safe: true, attempts: candidateChecks.length, selected_by: selectedBy,
           safety_check_ms: recordMs(safetyCheckMs()),
           candidate_checks: candidateChecks } };
@@ -268,7 +287,7 @@ export async function runEpisode(cfg) {
           result = { candidate_id: t.preferred, probabilities: t.probabilities, observation_id: obs.observation_id, model_version: 'observable-teacher' };
         } else {
           const started = performance.now();
-          result = await requestSafeVlmAction(ex, obs, async (candidates) => {
+          result = await requestVlmAction(ex, obs, async (candidates) => {
             const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, { ...obs, candidates }, history, shot));
             const output = await response.json();
             if (!response.ok) throw Error(`model ${response.status}: ${JSON.stringify(output).slice(0, 300)}`);
@@ -326,7 +345,7 @@ export async function runRealtime(cfg) {
     inflight = true; requests++;
     const t = performance.now();
     try {
-      const result = await requestSafeVlmAction(ex, obs, async (candidates) => {
+      const result = await requestVlmAction(ex, obs, async (candidates) => {
         const response = await post(cfg.model_url ?? '/predict', requestBody(cfg, { ...obs, candidates }, history, shot));
         const output = await response.json();
         if (!response.ok) throw Error(`model ${response.status}: ${JSON.stringify(output).slice(0, 300)}`);

@@ -2,7 +2,8 @@
  * DriveJev closed-loop runner: static server + model proxy + N headless Chrome workers.
  *
  *   node simulator/run.mjs --jobs eval/suites/test.json --out runs/test-ours [--workers 4] [--port 8981]
- *        [--model-url http://127.0.0.1:9031/predict] [--set policy=model,arm=default,aeb=false,safePass=false,realtime=false]
+ *        [--model-url http://127.0.0.1:9031/predict] [--set policy=model,arm=default,aeb=false,safe=false,safePass=false,prepare=false,realtime=false]
+ *        [--diagnostics] (save event-related diagnostic images; disabled by default)
  *
  * Each job is a runEpisode()/runRealtime() config ({seed, type, hazards, max_time_s, ...}); `--set`
  * overrides fields for every job. Writes <out>/episodes.jsonl and <out>/run.json. <out> must be new.
@@ -21,6 +22,7 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i < 0 ? d : pr
 const jobsPath = arg('--jobs'), outArg = arg('--out');
 if (!jobsPath || !outArg) { console.error('usage: node simulator/run.mjs --jobs <suite.json> --out <new dir> [--workers 4] [--model-url URL] [--set k=v,...]'); process.exit(2); }
 const out = path.resolve(outArg), workers = Number(arg('--workers', '4')), port = Number(arg('--port', '8981'));
+const saveDiagnostics = process.argv.includes('--diagnostics');
 const modelUrl = arg('--model-url', 'http://127.0.0.1:9031/predict');
 const stoclUrl = arg('--stocl-url', 'http://127.0.0.1:8765');
 const parse = (v) => (v === 'true' ? true : v === 'false' ? false : Number.isFinite(Number(v)) && v !== '' ? Number(v) : v);
@@ -72,13 +74,15 @@ function persistDiagnosticImages(result, job) {
     for (const camera of ['wide', 'tele']) {
       const key = `${episode}/${frame.frame_id}-${camera}`, field = `${camera}_png_base64`;
       if (!frame[field]) continue;
-      const relative = path.join('diagnostics', episode, `${frame.frame_id}-${camera}.png`), target = path.join(out, relative);
-      if (!writtenDiagnosticImages.has(key)) {
-        fs.mkdirSync(path.dirname(target), { recursive: true });
-        fs.writeFileSync(target, Buffer.from(frame[field], 'base64'));
-        writtenDiagnosticImages.add(key);
+      if (saveDiagnostics) {
+        const relative = path.join('diagnostics', episode, `${frame.frame_id}-${camera}.png`), target = path.join(out, relative);
+        if (!writtenDiagnosticImages.has(key)) {
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.writeFileSync(target, Buffer.from(frame[field], 'base64'));
+          writtenDiagnosticImages.add(key);
+        }
+        frame[`${camera}_png`] = relative.split(path.sep).join('/');
       }
-      frame[`${camera}_png`] = relative.split(path.sep).join('/');
       delete frame[field];
     }
   }
@@ -105,5 +109,5 @@ async function worker(w) {
 }
 await Promise.all(Array.from({ length: Math.min(workers, jobs.length) }, (_, w) => worker(w)));
 fs.closeSync(episodes);
-fs.writeFileSync(path.join(out, 'run.json'), JSON.stringify({ jobs: jobsPath, overrides, model_url: modelUrl, episodes: done, failed, wall_s: (Date.now() - started) / 1000, finished_at: new Date().toISOString() }, null, 2));
+fs.writeFileSync(path.join(out, 'run.json'), JSON.stringify({ jobs: jobsPath, overrides, model_url: modelUrl, diagnostics: saveDiagnostics, episodes: done, failed, wall_s: (Date.now() - started) / 1000, finished_at: new Date().toISOString() }, null, 2));
 await browser.close(); server.close();

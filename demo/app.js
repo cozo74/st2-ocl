@@ -100,6 +100,10 @@ let backends = { drivejev: { status: "unknown" }, jev: { configured: false }, ke
 // One switch: the executor's AEB for semantic pilots, JevPilot's traffic safety envelope for Jev/Kev.
 let safetyBrake = params.get("aeb") !== "off" && params.get("safety") !== "off";
 let safePassEnabled = params.get("safe_pass") !== "off";
+let safeCheckEnabled = params.get("safe_check") !== "off";
+let freezeWhileWaiting = ["false", "off"].includes(params.get("realtime"));
+let autoEngagePending = params.get("autostart") === "1";
+let autoEngageStarted = false;
 let loading = true,
   lastMapDraw = 0;
 showLoading("Loading car and scenery…");
@@ -415,7 +419,7 @@ async function setPilot(on) {
     const token = generation;
     let ready = false;
     try {
-      ready = await runtime.engage(sim, pilot, { aeb: safetyBrake, safePass: safePassEnabled,
+      ready = await runtime.engage(sim, pilot, { aeb: safetyBrake, safePass: safePassEnabled, safeCheck: safeCheckEnabled, freezeWhileWaiting,
         obsSchema: backends.drivejev?.arms?.[pilot.arm]?.observation_schema ?? "1.1" });
     } catch (error) {
       toast(error.message, "error");
@@ -435,6 +439,13 @@ async function setPilot(on) {
   }
   sim.autopilot = true;
   syncPilot();
+}
+
+async function maybeAutoEngage() {
+  if (!autoEngagePending || autoEngageStarted || loading || engaging || sim.autopilot || !pilotAvailability(pilot).ok) return;
+  autoEngageStarted = true;
+  autoEngagePending = false;
+  await setPilot(true);
 }
 
 async function resetWorld(seed = sim.world.seed, kind = worldKind) {
@@ -505,6 +516,7 @@ async function finishLoading() {
   touch.sync();
   updateUI();
   drawMap();
+  void maybeAutoEngage();
 }
 function changeCamera() {
   const modes = ["chase", "hood", "map"];
@@ -1242,6 +1254,7 @@ async function pollStatus() {
     if (!wasReady && pilotAvailability(pilot).ok) toast(`${pilot.name} is ready · press J to engage`);
     syncPilot();
     if (!sim.autopilot) updateSemanticStatusIfIdle();
+    void maybeAutoEngage();
   } catch {
     backends = { drivejev: { status: "unavailable" }, jev: { configured: false }, kev: { available: false } };
   }

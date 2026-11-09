@@ -30,7 +30,12 @@ export const ACTIONS = {
 };
 const MOTION = ['keep_route_cruise', 'proceed_route', 'route_turn'];
 const STOPPING = ['stop_at_line', 'yield_agent', 'emergency_brake'];
-const SAFE_PASS_LOW_SPEED_MPS = 3;
+const SAFE_PASS_LOW_SPEED_MPS = 8;
+const PREPARE_TO_STOP_APPROACH_M = 55;
+const PREPARE_TO_STOP_SPEED_MPS = 8;
+const PREPARE_TO_STOP_BRAKING_MPS2 = 5;
+const PREPARE_TO_STOP_REACTION_S = 1;
+const PREPARE_TO_STOP_MARGIN_M = 2;
 const r1 = (x) => (Number.isFinite(x) ? Math.round(x * 10) / 10 : null);
 const r2 = (x) => (Number.isFinite(x) ? Math.round(x * 100) / 100 : null);
 
@@ -87,7 +92,7 @@ export function accSpeed(v, lead) {
 }
 
 export class SemanticExecutor {
-  constructor(sim, { aeb = false, safePass = true } = {}) {
+  constructor(sim, { aeb = false, safePass = false } = {}) {
     this.sim = sim; this.aeb = aeb; this.safePass = safePass; this.sequence = 0; this.stepId = 0; this.acceleration = 0; this.jerk = 0;
     this.maneuver = null; this.lastActions = []; this.frames = new Map(); this.policySource = 'local_executor';
     this.aebEvents = 0; this.aebSteps = 0; this.frontBumperEvents = []; this.violationEvents = []; this.frontLineLocks = new Map();
@@ -111,22 +116,36 @@ export class SemanticExecutor {
     const inApproachZone = distance > 0 && distance <= 3 * v.speed;
     const lowSpeedNearLine = v.speed <= SAFE_PASS_LOW_SPEED_MPS
       && distance > 0 && distance < v.speed;
-    // 不读取仿真器的信号灯真值；所有信号灯路口的 keep_route_cruise 都使用同一套限速。
-    if (!this.safePass || this.policySource === 'observable-teacher'
-      || maneuver?.action_type !== 'keep_route_cruise' || node?.control !== 'signal'
-      || !inApproachZone) return target;
+    // 只检查路口是否由信号灯控制，不读取灯色；PrepareToStop=false 时限制巡航速度。
+    if (this.policySource === 'observable-teacher'
+      || maneuver?.action_type !== 'keep_route_cruise' || node?.control !== 'signal') return target;
 
-    // 已进入低速近线状态后保持不超过 3 m/s，直到前保险杠越过停止线；随后恢复原候选目标速度。
-    if (lowSpeedNearLine) return Math.min(target, SAFE_PASS_LOW_SPEED_MPS);
+    let limitedTarget = target;
+    const inPrepareToStopZone = distance > 0 && distance <= PREPARE_TO_STOP_APPROACH_M;
+    if (maneuver?.prepare_to_stop === false && inPrepareToStopZone) {
+      // 解 CanStop 的距离不等式 d >= v*t_reaction + v²/(2*b) + margin，
+      // 得到当前距离下仍可停车的最高速度；目标速度同时限制在 8 m/s 以下。
+      const b = PREPARE_TO_STOP_BRAKING_MPS2, reaction = PREPARE_TO_STOP_REACTION_S;
+      const availableDistance = Math.max(0, distance - PREPARE_TO_STOP_MARGIN_M);
+      const stoppingSpeedEnvelope = Math.max(0,
+        Math.sqrt((b * reaction) ** 2 + 2 * b * availableDistance) - b * reaction);
+      limitedTarget = Math.min(limitedTarget, PREPARE_TO_STOP_SPEED_MPS, stoppingSpeedEnvelope);
+    }
 
-    // 按最大制动 8 m/s² 计算速度包络：希望在距线 3 m 处降至 3 m/s。
-    // 同时满足 CanStop 的停车距离边界；公式中的 stopLineDist 也是前保险杠到线的距离。
+    // SafePass 原有的速度包络独立保留；PrepareToStop 的限速不依赖 safePass 开关。
+    if (!this.safePass || !inApproachZone) return limitedTarget;
+
+    // 已进入低速近线状态后保持不超过 SafePass 设定的低速阈值，直到前保险杠越过停止线。
+    if (lowSpeedNearLine) return Math.min(limitedTarget, SAFE_PASS_LOW_SPEED_MPS);
+
+    // SafePass 按最大制动 8 m/s² 计算速度包络：希望在距线 SAFE_PASS_LOW_SPEED_MPS 米处降至该低速阈值。
+    // 同时限制停车速度包络；stopLineDist 使用前保险杠到停止线的距离。
     const remainingToLowSpeedPoint = Math.max(0, distance - SAFE_PASS_LOW_SPEED_MPS);
     const lowSpeedEnvelope = Math.sqrt(
       SAFE_PASS_LOW_SPEED_MPS ** 2 + 2 * BRAKING * remainingToLowSpeedPoint,
     );
     const canStopEnvelope = Math.sqrt(2 * BRAKING * distance);
-    return Math.min(target, lowSpeedEnvelope, canStopEnvelope);
+    return Math.min(limitedTarget, lowSpeedEnvelope, canStopEnvelope);
   }
 
   /** Diagnostic-only snapshot: simulator truth, sensor-visible actors and the current rule/conflict estimate. */
@@ -251,7 +270,13 @@ export class SemanticExecutor {
     if (!chosen || JSON.stringify(offered) !== JSON.stringify([chosen.candidate_id, chosen.action_type, chosen.target_id ?? null, chosen.speed_profile])) return { accepted: false, reason: 'candidate_signature_changed', observation_age_s: age };
     if (original.maneuver_version !== this.maneuverVersion()) return { accepted: false, reason: 'maneuver_version_changed', observation_age_s: age };
     const accepted = this.select(chosen);
-    if (accepted.accepted) this.policySource = result.model_version ?? 'unknown';
+    if (accepted.accepted) {
+      this.policySource = result.model_version ?? 'unknown';
+      if (this.maneuver) {
+        this.maneuver.prepare_to_stop = this.maneuver.action_type === 'keep_route_cruise'
+          && typeof result.prepare_to_stop === 'boolean' ? result.prepare_to_stop : null;
+      }
+    }
     return { ...accepted, observation_age_s: age };
   }
   select(c) {
@@ -264,7 +289,7 @@ export class SemanticExecutor {
       return { accepted: false, reason: 'nonurgent_hysteresis', maneuver_id: prior.maneuver_id };
     const line = type === 'stop_at_line' ? this.line() : null;
     this.maneuver = {
-      maneuver_id: `m${++this.sequence}`, action_type: type, target_id: target, started: sim.time, start_s: sim.player.s, status: 'active', line, feedback: [],
+      maneuver_id: `m${++this.sequence}`, action_type: type, target_id: target, started: sim.time, start_s: sim.player.s, status: 'active', line, feedback: [], prepare_to_stop: null,
       exit_s: type === 'route_turn' ? (this.crossing()?.stopS ?? sim.player.s) + 28 : null
     };
     this.lastActions.push({ action_type: type, at: sim.time }); this.lastActions = this.lastActions.slice(-3);
